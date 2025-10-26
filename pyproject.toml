@@ -14,9 +14,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "ipykernel>=7.0.1",
     "taskipy>=1.14.1",
 ]
 
 [tool.taskipy.tasks]
 format = 'uvx ruff format'
 run = "python main.py"
+
+
+[tool.ruff]
+line-length = 180

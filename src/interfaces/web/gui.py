@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QHBoxLayout,
 )
-from menu import executar_comando
+from src.services.menu import executar_comando
 
 
 class TimerGUI(QMainWindow):

@@ -28,7 +28,7 @@ class Timer(BaseModel):
             self.remaining = self.duration
         while self.remaining > timedelta(seconds=0) and not self.stop_signal:
             if self.running:
-                print(f"Tempo restante: {self.remaining}, at {datetime.datetime.now()}")
+                print(f"Tempo restante: {self.remaining}")  # , at {datetime.datetime.now()}")
                 sleep(1)
                 self.remaining -= timedelta(seconds=1)
             else:
@@ -53,6 +53,7 @@ class Timer(BaseModel):
         if self.running or self.remaining:
             self.stop_signal = True  # ⛔ Sinaliza para encerrar a thread
             self.running = False
+            self.remaining = self.duration
             print("🔁 Timer será resetado...")
 
 

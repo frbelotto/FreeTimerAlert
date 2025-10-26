@@ -177,3 +177,6 @@ pyrightconfig.json
 
 # Generated using ignr.py - github.com/Antrikshy/ignr.py
 
+.vscode/launch.json
+uv.lock
+uv.lock
