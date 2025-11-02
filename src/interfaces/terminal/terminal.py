@@ -4,6 +4,8 @@ from typing import Callable
 from src.interfaces.base_interface import TimerInterface
 from src.services.parse_utils import parse_time
 import inspect
+from rich import print
+
 
 
 
@@ -47,7 +49,7 @@ class TerminalInterface(TimerInterface):
         """Mostra o menu com os comandos disponíveis."""
         print('\n📋 Comandos Disponíveis: Comandos que exigem parâmetros, estes devem ser nomeados (kwargs)')
         for i, (name, info) in enumerate(self.commands.items(), 1):
-            print(f"{name}: {info.description}")
+            print(f"▶️  [bold red]{name}[/bold red]: {info.description}")
         
         print("\n⚡ Comandos Especiais:")
         print("- ajuda: Mostra este menu")

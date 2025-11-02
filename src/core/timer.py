@@ -1,4 +1,3 @@
-import datetime
 import threading
 from datetime import timedelta
 from time import sleep
@@ -38,6 +37,7 @@ class Timer(BaseModel):
         else:
             print("🔴 Timer resetado!")
         self.running = False
+        self.remaining = self.duration
 
     def pause_or_resume_timer(self):
         self.running = not self.running
