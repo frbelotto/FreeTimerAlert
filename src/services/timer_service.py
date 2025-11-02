@@ -36,7 +36,8 @@ class TimerService:
         """Retorna um dicionário com todos os timers ativos."""
         if len(self._timers) == 0:
             print("Não existem timers criados")
-        return self._timers
+        else :
+            return self._timers
 
     def start_timer(self, name: str) -> None:
         """Inicia um timer específico."""
