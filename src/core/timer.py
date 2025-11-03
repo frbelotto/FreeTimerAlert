@@ -1,6 +1,7 @@
 import threading
 from datetime import timedelta
 from time import sleep
+from typing import Callable
 
 from pydantic import BaseModel, validate_call
 
@@ -13,18 +14,23 @@ class Timer(BaseModel):
     running: bool = False
     stop_signal: bool = False
 
+    on_start: list[Callable] = []
+    on_end: list[Callable] = []
+
     def start_timer(self):
         if self.running:
             print("⚠️ Timer já está em execução.")
             return
         self.running = True
         self.stop_signal: bool = False  # 🔴 Novo atributo para sinalizar parada
-        print("🟢 Timer iniciado")
+        # print("🟢 Timer iniciado")
+        self.notify("start")  # 🔔 dispara evento de início
         threading.Thread(target=self.run, daemon=False).start()
 
     def run(self):
         if self.remaining is None:
             self.remaining = self.duration
+
         while self.remaining > timedelta(seconds=0) and not self.stop_signal:
             if self.running:
                 print(f"Tempo restante: {self.remaining}")  # , at {datetime.datetime.now()}")
@@ -33,7 +39,8 @@ class Timer(BaseModel):
             else:
                 sleep(0.1)  # ⬅️ Espera leve enquanto pausado
         if not self.stop_signal:
-            print("⏰ Timer finalizado!")
+            self.notify("end")  # 🔔 dispara evento de fim
+            # print("⏰ Timer finalizado!")
         else:
             print("🔴 Timer resetado!")
         self.running = False
@@ -55,6 +62,18 @@ class Timer(BaseModel):
             self.running = False
             self.remaining = self.duration
             print("🔁 Timer será resetado...")
+
+    @validate_call()
+    def notify(self, event: str):
+        callbacks = {
+            "start": self.on_start,
+            "end": self.on_end,
+        }
+        for callback in callbacks.get(event, []):
+            try:
+                callback(self)
+            except Exception as e:
+                print(f"Erro na notificação '{event}': {e}")
 
 
 if __name__ == "__main__":

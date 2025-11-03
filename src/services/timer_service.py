@@ -5,20 +5,20 @@ from src.core.timer import Timer
 
 class TimerService:
     """Serviço de gerenciamento de timers.
-    
+
     Responsável por criar, buscar e gerenciar timers. Não contém lógica
     de apresentação ou formatação - apenas operações nos timers.
     """
-    
+
     def __init__(self):
         self._timers: Dict[str, Timer] = {}
         self._listservices = {
-            'Criar : Criar timers (name, duration)': self.create_timer,
-            'Listar : Listar timers': self.list_timers,
-            'Iniciar : Iniciar timer (name)': self.start_timer,
-            'Pausar : Pausar ou resumir timer (name)': self.pause_or_resume_timer,
-            'Resetar : Resetar um timer (name)': self.reset_timer,
-            'Adicionar : Adicionar tempo extra a um timer (name)': self.add_time
+            "Criar : Criar timers (name, duration)": self.create_timer,
+            "Listar : Listar timers": self.list_timers,
+            "Iniciar : Iniciar timer (name)": self.start_timer,
+            "Pausar : Pausar ou resumir timer (name)": self.pause_or_resume_timer,
+            "Resetar : Resetar um timer (name)": self.reset_timer,
+            "Adicionar : Adicionar tempo extra a um timer (name)": self.add_time,
         }
 
     def get_timer(self, name: str) -> Timer | None:
@@ -36,7 +36,7 @@ class TimerService:
         """Retorna um dicionário com todos os timers ativos."""
         if len(self._timers) == 0:
             print("Não existem timers criados")
-        else :
+        else:
             return self._timers
 
     def start_timer(self, name: str) -> None:
@@ -51,7 +51,7 @@ class TimerService:
         timer = self.get_timer(name)
         if not timer:
             raise ValueError(f"Timer '{name}' não existe")
-        timer.pause_or_resume_timer ()
+        timer.pause_or_resume_timer()
 
     def reset_timer(self, name: str) -> None:
         """Reseta um timer para sua duração original."""
@@ -71,5 +71,3 @@ class TimerService:
     def available_services(self):
         """Retorna o dicionário de serviços disponíveis."""
         return self._listservices
-
-    

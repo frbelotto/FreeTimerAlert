@@ -1,6 +1,7 @@
 from datetime import timedelta
 import re
 
+
 def parse_time(time_str: str) -> timedelta:
     """Converte string de tempo para timedelta"""
     if time_str.isdigit():  # Se for apenas números, assume segundos
@@ -10,10 +11,7 @@ def parse_time(time_str: str) -> timedelta:
     match = re.match(pattern, time_str.lower())
 
     if not match or not any(match.groups()):
-        raise ValueError(
-            "Formato de tempo inválido. Use: Xh, Ym, Zs ou combinações "
-            "(ex: 1h30m, 45s, 2h15m30s)"
-        )
+        raise ValueError("Formato de tempo inválido. Use: Xh, Ym, Zs ou combinações (ex: 1h30m, 45s, 2h15m30s)")
 
     hours = int(match.group(1) or 0)
     minutes = int(match.group(2) or 0)
