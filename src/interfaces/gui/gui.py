@@ -6,13 +6,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QPushButton,
     QLineEdit,
-    QLabel,
     QListWidget,
     QMessageBox,
     QHBoxLayout,
     QSpinBox,
 )
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QTimer
 from src.interfaces.base_interface import TimerInterface
 
 
@@ -113,7 +112,7 @@ class GuiInterface(TimerInterface, QMainWindow):
     def pause_selected_timer(self):
         if name := self.get_selected_timer_name():
             try:
-                self.service.pause_timer(name)
+                self.service.pause_or_resume_timer(name)
             except ValueError as e:
                 QMessageBox.warning(self, "Erro", str(e))
 

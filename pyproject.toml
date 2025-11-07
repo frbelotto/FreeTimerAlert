@@ -17,12 +17,19 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ipykernel>=7.0.1",
+    "pytest>=8.3.4",
     "taskipy>=1.14.1",
 ]
 
 [tool.taskipy.tasks]
 format = 'uvx ruff format'
 run = "python main.py"
+test = "pytest tests/ -v"
+
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
 
 
 [tool.ruff]

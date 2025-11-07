@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Dict, Type
 from src.services.logger import get_logger, setup_logging
 from src.interfaces.base_interface import TimerInterface
+import importlib
 
 # Configura o logger global para o módulo
 logger = get_logger(__name__)
@@ -20,7 +21,6 @@ class Interfaces(Enum):
 
     def get_class(self) -> Type[TimerInterface]:
         """Retorna a classe da interface (sem instanciar)"""
-        import importlib
 
         module_path, class_name = self.value
         try:

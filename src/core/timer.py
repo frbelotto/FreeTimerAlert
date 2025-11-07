@@ -3,7 +3,7 @@ from datetime import timedelta
 from time import sleep
 from typing import Callable
 
-from pydantic import BaseModel, validate_call
+from pydantic import BaseModel, validate_call, Field
 
 
 class Timer(BaseModel):
@@ -14,8 +14,9 @@ class Timer(BaseModel):
     running: bool = False
     stop_signal: bool = False
 
-    on_start: list[Callable] = []
-    on_end: list[Callable] = []
+    # Use default_factory to avoid shared mutable defaults between instances
+    on_start: list[Callable] = Field(default_factory=list)
+    on_end: list[Callable] = Field(default_factory=list)
 
     def start_timer(self):
         if self.running:
@@ -25,7 +26,7 @@ class Timer(BaseModel):
         self.stop_signal: bool = False  # 🔴 Novo atributo para sinalizar parada
         # print("🟢 Timer iniciado")
         self.notify("start")  # 🔔 dispara evento de início
-        threading.Thread(target=self.run, daemon=False).start()
+        threading.Thread(target=self.run, daemon=True).start()
 
     def run(self):
         if self.remaining is None:

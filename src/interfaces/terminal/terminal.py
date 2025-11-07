@@ -5,7 +5,7 @@ from src.interfaces.base_interface import TimerInterface
 from src.services.parse_utils import parse_time
 import inspect
 from rich import print
-from interfaces.terminal.terminal_notification import TerminalNotificationService
+from src.interfaces.terminal.terminal_notification import TerminalNotificationService
 
 
 class CommandInfo(BaseModel):
@@ -42,10 +42,37 @@ class TerminalInterface(TimerInterface):
             command_info[cmd_name] = CommandInfo(name=cmd_name, description=description, handler=handler)
 
         return command_info
+    
+    def _attach_notifications(self, name: str) -> None:
+        """Garante que callbacks de notificação estejam associados ao timer informado.
+
+        Substitui callbacks existentes para manter idempotência e evitar duplicação.
+        """
+        timer = self.service.get_timer(name)
+        if not timer:
+            return
+
+        def _on_start(_timer):
+            try:
+                self.notifier.on_timer_start(name)
+            except Exception as e:
+                print(f"Falha ao notificar início: {e}")
+
+        def _on_end(_timer):
+            try:
+                self.notifier.on_timer_end(name)
+            except Exception as e:
+                print(f"Falha ao notificar término: {e}")
+
+        # Remove todos os ouvintes anteriores e adiciona apenas os de notificação
+        timer.on_start.clear()
+        timer.on_start.append(_on_start)
+        timer.on_end.clear()
+        timer.on_end.append(_on_end)
 
     def show_menu(self) -> None:
         """Mostra o menu com os comandos disponíveis."""
-        print("\n📋 Comandos Disponíveis: Comandos que exigem parâmetros, estes devem ser nomeados (kwargs)")
+        print("\n📋 Comandos Disponíveis: ")
         for i, (name, info) in enumerate(self.commands.items(), 1):
             print(f"▶️  [bold red]{name}[/bold red]: {info.description}")
 
@@ -96,7 +123,7 @@ class TerminalInterface(TimerInterface):
                                 1h30m = 1 hora e 30 minutos
                                 30s   = 30 segundos
                                 """)
-                        value = input(f"Digite o valor para o parâmetro '{param.name}', que é do tipo ({param.annotation}): ")
+                        value = input(f"Digite o valor para o parâmetro '{param.name}', que é do tipo ({param.annotation}): ").strip()
 
                         if param.annotation is timedelta:
                             value = parse_time(value)
@@ -104,7 +131,13 @@ class TerminalInterface(TimerInterface):
                         if value:
                             kwargs[param.name] = value
 
+                    # Executa o handler
                     result = handler(**kwargs)
+
+                    # Anexa notificações após criar o timer
+                    if cmd == "criar" and "name" in kwargs:
+                        self._attach_notifications(kwargs["name"])
+
                     if result is not None:
                         print(result)
 
