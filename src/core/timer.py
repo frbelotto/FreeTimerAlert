@@ -3,20 +3,24 @@ from datetime import timedelta
 from time import sleep
 from typing import Callable
 
-from pydantic import BaseModel, validate_call, Field
+from pydantic import BaseModel, validate_call, Field, PrivateAttr
+
 
 
 class Timer(BaseModel):
     """Classe básica para o controle da duração e execução do timer"""
 
     duration: timedelta
-    remaining: timedelta | None = None
-    running: bool = False
-    stop_signal: bool = False
+    on_start: list[Callable] = Field(default_factory=list) # Use default_factory to avoid shared mutable defaults between instances
+    on_end: list[Callable] = Field(default_factory=list) # Use default_factory to avoid shared mutable defaults between instances
 
-    # Use default_factory to avoid shared mutable defaults between instances
-    on_start: list[Callable] = Field(default_factory=list)
-    on_end: list[Callable] = Field(default_factory=list)
+    _remaining: timedelta = PrivateAttr()
+    _running: bool = PrivateAttr(default=False)
+    _stop_signal: bool = PrivateAttr(default=False)
+
+    def model_post_init(self, __context):
+        if self._remaining is None:
+            self._remaining = self.duration
 
     def start_timer(self):
         if self.running:
