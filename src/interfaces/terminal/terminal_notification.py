@@ -28,6 +28,7 @@ def _play_sound(filename: str):
         logger.warning(f"⚠️  Falha ao reproduzir som '{filename}': {e}")
         return None
 
+
 class TerminalNotificationService(NotificationService):
     def on_timer_start(self, name: str):
         logger.info(f"🟢 Timer '{name}' foi iniciado!")

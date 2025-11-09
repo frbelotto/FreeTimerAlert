@@ -1,93 +1,76 @@
-import threading
+from __future__ import annotations
 from datetime import timedelta
-from time import sleep
-from typing import Callable
+from typing import Callable, List
+from enum import StrEnum, auto
+from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
+from src.services.logger import get_logger
 
-from pydantic import BaseModel, validate_call, Field, PrivateAttr
+logger = get_logger(__name__)
 
+class TimerStatus(StrEnum):
+    IDLE = auto()
+    RUNNING = auto()
+    PAUSED = auto()
+    FINISHED = auto()
+    STOPPED = auto()
 
 
 class Timer(BaseModel):
-    """Classe básica para o controle da duração e execução do timer"""
-
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     duration: timedelta
-    on_start: list[Callable] = Field(default_factory=list) # Use default_factory to avoid shared mutable defaults between instances
-    on_end: list[Callable] = Field(default_factory=list) # Use default_factory to avoid shared mutable defaults between instances
-
+    status: TimerStatus = Field(default=TimerStatus.IDLE)
+    on_start: List[Callable[[Timer], None]] = Field(default_factory=list)
+    on_end: List[Callable[[Timer], None]] = Field(default_factory=list)
+    
     _remaining: timedelta = PrivateAttr()
-    _running: bool = PrivateAttr(default=False)
-    _stop_signal: bool = PrivateAttr(default=False)
+ 
+    def model_post_init(self, __context: Any) -> None:
+        self._remaining = self.duration
 
-    def model_post_init(self, __context):
-        if self._remaining is None:
-            self._remaining = self.duration
+    @field_validator("duration")
+    def validate_positive(cls, duration: timedelta):
+        if duration <= timedelta(0):
+            raise ValueError("duration must be > 0")
+        return duration
 
-    def start_timer(self):
-        if self.running:
-            print("⚠️ Timer já está em execução.")
+    def start(self):
+        if self.status in (TimerStatus.RUNNING, TimerStatus.PAUSED):
             return
-        self.running = True
-        self.stop_signal: bool = False  # 🔴 Novo atributo para sinalizar parada
-        # print("🟢 Timer iniciado")
-        self.notify("start")  # 🔔 dispara evento de início
-        threading.Thread(target=self.run, daemon=True).start()
+        self.status = TimerStatus.RUNNING
+        self._notify(self.on_start)
 
-    def run(self):
-        if self.remaining is None:
-            self.remaining = self.duration
+    def pause(self):
+        if self.status == TimerStatus.RUNNING:
+            self.status = TimerStatus.PAUSED
 
-        while self.remaining > timedelta(seconds=0) and not self.stop_signal:
-            if self.running:
-                print(f"Tempo restante: {self.remaining}")  # , at {datetime.datetime.now()}")
-                sleep(1)
-                self.remaining -= timedelta(seconds=1)
-            else:
-                sleep(0.1)  # ⬅️ Espera leve enquanto pausado
-        if not self.stop_signal:
-            self.notify("end")  # 🔔 dispara evento de fim
-            # print("⏰ Timer finalizado!")
-        else:
-            print("🔴 Timer resetado!")
-        self.running = False
-        self.remaining = self.duration
+    def resume(self):
+        if self.status == TimerStatus.PAUSED:
+            self.status = TimerStatus.RUNNING
 
-    def pause_or_resume_timer(self):
-        self.running = not self.running
-        print("▶️ Timer retomado." if self.running else "⏸️ Timer pausado.")
+    def tick(self, seconds: int = 1):
+        if self.status != TimerStatus.RUNNING:
+            return
+        self._remaining -= timedelta(seconds=seconds)
+        if self._remaining <= timedelta(0):
+            self._remaining = timedelta(0)
+            self.status = TimerStatus.FINISHED
+            self._notify(self.on_end)
 
-    @validate_call()
     def add_time(self, extra: timedelta):
-        if self.remaining:
-            self.remaining += extra
-            print(f"⏱️ Tempo adicionado: {extra}. Novo tempo restante: {self.remaining}")
+        self._remaining += extra
 
-    def reset_timer(self):
-        if self.running or self.remaining:
-            self.stop_signal = True  # ⛔ Sinaliza para encerrar a thread
-            self.running = False
-            self.remaining = self.duration
-            print("🔁 Timer será resetado...")
+    def reset(self):
+        self._remaining = self.duration
+        self.status = TimerStatus.IDLE
 
-    @validate_call()
-    def notify(self, event: str):
-        callbacks = {
-            "start": self.on_start,
-            "end": self.on_end,
-        }
-        for callback in callbacks.get(event, []):
+    def stop(self):
+        self.status = TimerStatus.STOPPED
+        self._remaining = self.duration
+
+    def _notify(self, callbacks: List[Callable[[Timer], None]]):
+        for cb in callbacks:
             try:
-                callback(self)
+                cb(self)
             except Exception as e:
-                print(f"Erro na notificação '{event}': {e}")
-
-
-if __name__ == "__main__":
-    timer = Timer(duration=timedelta(seconds=10))
-    timer.start_timer()
-    sleep(4)
-    timer.pause_or_resume_timer()
-    sleep(5)
-    timer.pause_or_resume_timer()
-    timer.add_time(timedelta(seconds=5))
-    sleep(3)
-    timer.reset_timer()
+                logger.error(f"Erro no callback: {e}")

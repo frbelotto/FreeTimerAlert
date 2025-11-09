@@ -42,7 +42,7 @@ class TerminalInterface(TimerInterface):
             command_info[cmd_name] = CommandInfo(name=cmd_name, description=description, handler=handler)
 
         return command_info
-    
+
     def _attach_notifications(self, name: str) -> None:
         """Garante que callbacks de notificação estejam associados ao timer informado.
 

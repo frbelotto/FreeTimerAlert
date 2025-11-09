@@ -1,17 +1,19 @@
 from datetime import timedelta
 from typing import Dict
 from src.core.timer import Timer
+from src.core.timerexecutor import TimerExecutor
 
 
 class TimerService:
     """Serviço de gerenciamento de timers.
 
-    Responsável por criar, buscar e gerenciar timers. Não contém lógica
-    de apresentação ou formatação - apenas operações nos timers.
+    Responsável por criar, buscar e gerenciar timers e seus executores.
+    Não contém lógica de apresentação ou formatação - apenas operações nos timers.
     """
 
     def __init__(self):
         self._timers: Dict[str, Timer] = {}
+        self._executors: Dict[str, TimerExecutor] = {}
         self._listservices = {
             "Criar : Criar timers (nome, duração)": self.create_timer,
             "Listar : Listar timers": self.list_timers,
@@ -29,8 +31,10 @@ class TimerService:
         """Cria um novo timer com a duração especificada."""
         if name in self._timers:
             raise ValueError(f"Timer '{name}' já existe")
-        self._timers[name] = Timer(duration=duration)
-        return self._timers[name]
+        timer = Timer(duration=duration)
+        self._timers[name] = timer
+        self._executors[name] = TimerExecutor(timer)
+        return timer
 
     def list_timers(self) -> Dict[str, Timer]:
         """Retorna um dicionário com todos os timers ativos."""
@@ -39,24 +43,30 @@ class TimerService:
 
     def start_timer(self, name: str) -> None:
         """Inicia um timer específico."""
-        timer = self.get_timer(name)
-        if not timer:
+        executor = self._executors.get(name)
+        if not executor:
             raise ValueError(f"Timer '{name}' não existe")
-        timer.start_timer()
+        executor.start()
 
     def pause_or_resume_timer(self, name: str) -> None:
-        """Pausa um timer específico."""
-        timer = self.get_timer(name)
-        if not timer:
+        """Pausa ou retoma um timer específico."""
+        executor = self._executors.get(name)
+        if not executor:
             raise ValueError(f"Timer '{name}' não existe")
-        timer.pause_or_resume_timer()
+        timer = self.get_timer(name)
+        if timer and timer.status.value == "paused":
+            executor.resume()
+        else:
+            executor.pause()
 
     def reset_timer(self, name: str) -> None:
         """Reseta um timer para sua duração original."""
+        executor = self._executors.get(name)
         timer = self.get_timer(name)
-        if not timer:
+        if not timer or not executor:
             raise ValueError(f"Timer '{name}' não existe")
-        timer.reset_timer()
+        executor.stop()
+        timer.reset()
 
     def add_time(self, name: str, duration: timedelta) -> None:
         """Adiciona tempo extra a um timer existente."""

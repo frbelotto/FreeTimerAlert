@@ -1,50 +1,37 @@
+from __future__ import annotations
+
 import logging
 
 
-def setup_logging(log_level: int = logging.INFO, log_file: str = "freetimer.log") -> None:
+class LoggerService:
+    """Singleton para gerenciar logging do sistema.
     """
-    Configura o sistema de logging com dois handlers:
-    - Console: Mostra apenas a mensagem de forma limpa
-    - Arquivo: Registra logs detalhados com timestamp e nível
-
-    Args:
-        log_level: Nível de logging (default: logging.INFO)
-        log_file: Nome do arquivo de log (default: freetimer.log)
-    """
-    # Configura o logger raiz
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
-
-    # Remove handlers existentes para evitar duplicação
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # 1. Handler para Console (formato simples)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)
-    console_formatter = logging.Formatter("%(message)s")  # Apenas a mensagem
-    console_handler.setFormatter(console_formatter)
-    root_logger.addHandler(console_handler)
-
-    # 2. Handler para Arquivo (formato detalhado)
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(log_level)
-    file_formatter = logging.Formatter(
-        fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    file_handler.setFormatter(file_formatter)
-    root_logger.addHandler(file_handler)
+    
+    _instance: LoggerService | None = None
+    
+    def __new__(cls) -> LoggerService:
+        """Garante que apenas uma instância exista (padrão Singleton).
+        
+        Sempre que você faz LoggerService(), retorna a MESMA instância.
+        """
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._setup_root_logger()
+        return cls._instance
+    
+    def _setup_root_logger(self) -> None:
+        root = logging.getLogger()
+        root.setLevel(logging.INFO)
+        root.handlers.clear()
+        
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        root.addHandler(handler)
+    
+    def get_logger(self, name: str) -> logging.Logger:
+        return logging.getLogger(name)
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Retorna um logger configurado para o módulo especificado.
-
-    Args:
-        name: Nome do módulo/componente para o logger
-
-    Returns:
-        logging.Logger: Logger configurado
-    """
-    return logging.getLogger(name)
+    service = LoggerService()  # Sempre retorna a MESMA instância
+    return service.get_logger(name)

@@ -15,6 +15,3 @@ class TimerInterface(ABC):
     def show_menu(self) -> None:
         """Exibe o menu da interface"""
         pass
-
-    
-    
