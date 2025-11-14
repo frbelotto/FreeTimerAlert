@@ -343,14 +343,14 @@ wheels = [
 
 [[package]]
 name = "playsound3"
-version = "3.2.8"
+version = "3.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/20/df/1bc4664f65f5068df468e1d4c085382dcdf17454276531938341a01ee935/playsound3-3.2.8.tar.gz", hash = "sha256:c7a7b4dbbd1cdf76a2715059daf20537bb2f8713ee8f2f5a27e3e053374c2342", size = 608326, upload-time = "2025-10-01T19:45:28.958Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/95/10/77205c8e76de5889a75d35ce9b3394a3168628cb2dcb5970f7a908e7fde6/playsound3-3.3.0.tar.gz", hash = "sha256:9c9a0b14d1b46cef909ae315503592e0705d5cf9d90ba4e6ffd44b4d47c60523", size = 608289, upload-time = "2025-11-07T10:37:16.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/11/83a47fa57257f4b2bbc52aa4b5ebcdb1e6aba0ebd8604a85d9a375194e36/playsound3-3.2.8-py3-none-any.whl", hash = "sha256:1225807f14354702cba0171c999fe062580d77d07d8718a35b5978ed00272402", size = 9679, upload-time = "2025-10-01T19:45:27.277Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/09/6ea98a9c7b8444b2727b5ba86f4c9266b218e7bfabe79f013a41580c20d8/playsound3-3.3.0-py3-none-any.whl", hash = "sha256:56e30ca5c482ff102436a5cd456e49c3490e57bc3e97d6c09b5d189b5146e371", size = 9647, upload-time = "2025-11-07T10:37:14.802Z" },
 ]
 
 [[package]]
@@ -529,7 +529,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "8.4.2"
+version = "9.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -538,9 +538,9 @@ dependencies = [
     { name = "pluggy" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01", size = 1519618, upload-time = "2025-09-04T14:34:22.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/56/f013048ac4bc4c1d9be45afd4ab209ea62822fb1598f40687e6bf45dcea4/pytest-9.0.1.tar.gz", hash = "sha256:3e9c069ea73583e255c3b21cf46b8d3c56f6e3a1a8f6da94ccb0fcf57b9d73c8", size = 1564125, upload-time = "2025-11-12T13:05:09.333Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79", size = 365750, upload-time = "2025-09-04T14:34:20.226Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/8b/6300fb80f858cda1c51ffa17075df5d846757081d11ab4aa35cef9e6258b/pytest-9.0.1-py3-none-any.whl", hash = "sha256:67be0030d194df2dfa7b556f2e56fb3c3315bd5c8822c6951162b92b32ce7dad", size = 373668, upload-time = "2025-11-12T13:05:07.379Z" },
 ]
 
 [[package]]
