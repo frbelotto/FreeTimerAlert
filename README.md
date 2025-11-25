@@ -1,329 +1,449 @@
-FreeTimer é um timer simples e extensível. Hoje ele oferece uma interface de Terminal funcional; outras interfaces (GUI e Web) serão adicionadas futuramente. O core é desacoplado e pensado para ser fácil de evoluir.
+# FreeTimer
 
-## Como usar (Interface de Terminal)
+> A simple, extensible timer application with clean architecture and multiple interface support
 
-Pré‑requisitos:
-- Python 3.13+
-- uv (opcional, mas recomendado)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Passos:
-1) Instalar dependências
-	 - `uv sync`
-2) Executar o programa
-	 - `uv run python main.py`
-3) Escolher a interface “Terminal” e usar os comandos:
-	 - `criar` (name: str, duration: tempo)
-	 - `listar`
-	 - `iniciar` (name: str)
-	 - `pausar` (name: str)  → alterna entre pausar/retomar
-	 - `resetar` (name: str)
-	 - `adicionar` (name: str, duration: tempo)
+FreeTimer is a flexible timer application with a decoupled core architecture designed for easy extension. Currently features a fully functional Terminal interface, with GUI and Web interfaces planned for future releases.
 
-Formato de tempo aceito (duration):
-- `90`  → 90 segundos
-- `45m` → 45 minutos
-- `1h30m` → 1 hora e 30 minutos
-- `30s` → 30 segundos
+## Table of Contents
 
-Exemplo de sessão:
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Building Executable](#building-executable)
+
+## Features
+
+- ⏱️ **Multiple concurrent timers** - Run several timers simultaneously with independent controls
+- 🎯 **Simple time format** - Support for seconds, minutes, hours (e.g., `90`, `45m`, `1h30m`)
+- 🔊 **Audio notifications** - Sound alerts when timers start and finish
+- 🧵 **Thread-based execution** - Each timer runs in its own thread for true concurrency
+- 🎨 **Clean architecture** - Decoupled core with easy-to-extend interface layer
+- 🔇 **Mute support** - Optional audio muting for CI/server environments
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.10 or higher
+- [uv](https://github.com/astral-sh/uv) (recommended) or pip
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/frbelotto/FreeTimerAlert.git
+cd FreeTimerAlert
+
+# Install dependencies
+uv sync
+
+# Run the application
+uv run python main.py
 ```
-🎉 Bem-vindo ao FreeTimer!
-▶️  criar: Criar timers (name, duration)
-▶️  iniciar: Iniciar timer (name)
+
+## Usage
+
+### Terminal Interface
+
+Select the "Terminal" interface when prompted, then use the following commands:
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `criar` | name, duration | Create a new timer |
+| `listar` | - | List all timers |
+| `iniciar` | name | Start a timer |
+| `pausar` | name | Toggle pause/resume |
+| `resetar` | name | Reset timer to initial duration |
+| `adicionar` | name, duration | Add time to a timer |
+
+### Time Format
+
+FreeTimer accepts flexible time formats:
+
+| Format | Example | Result |
+|--------|---------|--------|
+| Seconds only | `90` | 90 seconds |
+| Minutes | `45m` | 45 minutes |
+| Hours + Minutes | `1h30m` | 1 hour 30 minutes |
+| Explicit seconds | `30s` | 30 seconds |
+
+### Example Session
+
+```bash
+🎉 Welcome to FreeTimer!
+▶️  criar: Create timers (name, duration)
+▶️  iniciar: Start timer (name)
 ...
 
-⌨️  Digite um comando: criar
-Digite o valor para 'name' (texto): foco
-⏰ Formatos de tempo aceitos...
-Digite o valor para 'duration' (tempo (90, 45m, 1h30m, 30s)): 25m
+⌨️  Enter command: criar
+Enter value for 'name' (text): focus
+⏰ Accepted time formats...
+Enter value for 'duration' (time (90, 45m, 1h30m, 30s)): 25m
 
-⌨️  Digite um comando: iniciar
-Digite o valor para 'name' (texto): foco
-🟢 Timer 'foco' foi iniciado!
-Tempo restante: 0:24:59
+⌨️  Enter command: iniciar
+Enter value for 'name' (text): focus
+🟢 Timer 'focus' started!
+Time remaining: 0:24:59
 ...
 ```
 
-Áudio de notificação:
-- Início: `Assets/Sounds/clock-start.mp3`
-- Fim: `Assets/Sounds/timer-terminer.mp3`
-- Desabilitar áudio (CI/servidor/sem backend): `FREETIMER_MUTE=1`
+### Audio Notifications
 
-Observação: se seu sistema não tiver backend de áudio disponível (ALSA/PulseAudio etc.), o programa continuará funcionando e registrará um aviso ao tentar tocar sons.
+- **Start sound**: `Assets/Sounds/clock-start.mp3`
+- **End sound**: `Assets/Sounds/timer-terminer.mp3`
+- **Disable audio**: Set environment variable `FREETIMER_MUTE=1`
 
-## Como funciona (por dentro)
+> **Note**: If your system lacks an audio backend (ALSA/PulseAudio), the application will continue to work and log a warning when attempting to play sounds.
 
-### Arquitetura
+## Architecture
 
-O FreeTimer segue uma arquitetura em camadas com separação clara de responsabilidades:
+FreeTimer follows a layered architecture with clear separation of concerns:
 
-**Timer** (`src/core/timer.py`)
-- Responsabilidade: Modelo de dados + lógica de contagem
-- Gerencia: duração, tempo restante, status
-- Métodos: `start()`, `pause()`, `resume()`, `stop()`, `reset()`, `tick()`
-- **Sem threading** (mantém simplicidade e testabilidade)
+### Core Components
 
-**TimerService** (`src/services/timer_service.py`)
-- Responsabilidade: Orquestrador de execução
-- Gerencia: múltiplos timers + threads de execução
-- Métodos: `create_timer()`, `start_timer()`, `stop_timer()`, `pause_or_resume_timer()`
-- Coordena: uma thread por timer ativo
+#### **Timer** (`src/core/timer.py`)
+- **Responsibility**: Self-contained timer with complete lifecycle management
+- **Manages**: duration, remaining time, status, and **its own execution thread**
+- **Methods**: `start()`, `pause()`, `resume()`, `stop()`, `reset()`, `tick()`
+- **Self-contained**: When started, creates its own thread and executes automatically
 
-**Interface** (terminal, GUI, web)
-- Responsabilidade: Interação com usuário
-- Traduz comandos do usuário para chamadas do TimerService
-- Anexa callbacks de notificação aos timers
+#### **TimerService** (`src/services/timer_service.py`)
+- **Responsibility**: Coordinator for multiple named timers
+- **Manages**: catalog of timers by name
+- **Methods**: `create_timer()`, `start_timer()`, `stop_timer()`, `pause_or_resume_timer()`
+- **Delegates**: Forwards commands to individual timers
 
-**Notificações** (`notifications.py` + implementações)
-- Contrato abstrato e implementações que tocam sons ou mostram alertas
+#### **Interface** (terminal, GUI, web)
+- **Responsibility**: User interaction
+- **Translates**: User commands into TimerService calls
+- **Attaches**: Notification callbacks to timers
 
-### Fluxo de Execução
+#### **Notifications** (`notifications.py` + implementations)
+- **Abstract contract**: Defines notification interface
+- **Implementations**: Play sounds or show alerts
+
+### Execution Flow
 
 ```
-1. service.create_timer("trabalho", timedelta(minutes=25))
-   └─> Cria Timer + threading.Event
+1. service.create_timer("work", timedelta(minutes=25))
+   └─> Creates a self-contained Timer
 
-2. service.start_timer("trabalho")
-   └─> timer.start() (marca como RUNNING)
-   └─> Cria thread background para executar ticks
-   └─> Dispara callback on_start
+2. service.start_timer("work")
+   └─> Delegates to timer.start()
+       └─> Timer creates its own thread
+       └─> Timer starts internal execution loop
+       └─> Triggers on_start callback
 
-3. Loop em background (thread dedicada):
-   └─> Enquanto não receber sinal de parada:
-       └─> Se timer.status == RUNNING:
+3. Automatic loop inside Timer:
+   └─> While not stopped:
+       └─> If timer.status == RUNNING:
            └─> timer.tick(seconds=1)
-       └─> Aguarda 1 segundo
+       └─> Wait 1 second
 
-4. Quando timer.remaining chega a zero:
+4. When timer.remaining reaches zero:
    └─> timer.status = FINISHED
-   └─> Dispara callback on_end
+   └─> Triggers on_end callback
+   └─> Thread terminates
 ```
 
-Componentes principais:
-- Core (`src/core/timer.py`): modelo simples que gerencia estado e lógica de contagem. Expõe eventos `on_start` e `on_end` (padrão Observer).
-- Serviço (`src/services/timer_service.py`): gerencia vários timers por nome, cria threads para execução em background, expõe operações de alto nível.
-- Interface de Terminal (`src/interfaces/terminal/terminal.py`): roteia comandos do usuário para o serviço e anexa callbacks de notificação.
-- Notificações (`src/interfaces/notifications.py` + `src/interfaces/terminal/terminal_notification.py`): contrato abstrato e implementação que toca sons no Terminal.
+### Architecture Diagram
 
-### Diagrama de arquitetura
-
-#### Visão geral do sistema
+#### System Overview
 
 ```mermaid
 flowchart TB
-    subgraph UI["🖥️ Camada de Interface"]
+    subgraph UI["🖥️ Interface Layer"]
         Terminal[Terminal Interface]
-        GUI[GUI Interface<br/><i>futuro</i>]
-        Web[Web Interface<br/><i>futuro</i>]
+        GUI[GUI Interface<br/><i>future</i>]
+        Web[Web Interface<br/><i>future</i>]
     end
     
-    subgraph Service["⚙️ Camada de Serviço"]
-        TS[TimerService<br/>- Gerencia timers<br/>- Cria threads<br/>- Coordena execução]
+    subgraph Service["⚙️ Service Layer"]
+        TS[TimerService<br/>- Timer catalog<br/>- Delegates commands]
     end
     
-    subgraph Core["💾 Camada de Domínio"]
-        T1[Timer: trabalho<br/>25min]
-        T2[Timer: pausa<br/>5min]
-        T3[Timer: almoço<br/>1h]
+    subgraph Core["💾 Self-Contained Timers"]
+        subgraph T1["Timer: work"]
+            T1D[Data: 25min]
+            T1T[Own thread]
+        end
+        subgraph T2["Timer: break"]
+            T2D[Data: 5min]
+            T2T[Own thread]
+        end
+        subgraph T3["Timer: lunch"]
+            T3D[Data: 1h]
+            T3T[Own thread]
+        end
     end
     
-    subgraph Threads["🧵 Threads de Execução"]
-        TH1[Thread 1<br/>tick a cada 1s]
-        TH2[Thread 2<br/>tick a cada 1s]
-    end
-    
-    subgraph Notify["🔔 Notificações"]
-        NS[NotificationService<br/>- Toca sons<br/>- Mostra alertas]
+    subgraph Notify["🔔 Notifications"]
+        NS[NotificationService<br/>- Plays sounds<br/>- Shows alerts]
     end
     
     Terminal --> TS
     GUI -.-> TS
     Web -.-> TS
     
-    TS -->|cria/gerencia| T1
-    TS -->|cria/gerencia| T2
-    TS -->|cria/gerencia| T3
+    TS -->|delegates| T1
+    TS -->|delegates| T2
+    TS -->|delegates| T3
     
-    TS -->|inicia| TH1
-    TS -->|inicia| TH2
-    
-    TH1 -.->|timer.tick()| T1
-    TH2 -.->|timer.tick()| T2
+    T1T -.->|internal tick| T1D
+    T2T -.->|internal tick| T2D
     
     T1 -->|on_start/on_end| NS
     T2 -->|on_start/on_end| NS
     T3 -->|on_start/on_end| NS
 ```
 
-#### Gerenciamento de múltiplos timers
+#### Multiple Timer Management
 
 ```mermaid
 graph TB
     subgraph TS["TimerService"]
         direction TB
-        TM["_timers = {<br/>'trabalho': Timer1,<br/>'pausa': Timer2<br/>}"]
-        TH["_threads = {<br/>'trabalho': Thread1,<br/>'pausa': Thread2<br/>}"]
-        EV["_stop_events = {<br/>'trabalho': Event1,<br/>'pausa': Event2<br/>}"]
+        TM["_timers = {<br/>'work': Timer1,<br/>'break': Timer2<br/>}"]
     end
     
-    subgraph Thread1["Thread 1: trabalho"]
-        L1["Loop infinito:<br/>while not Event1.is_set():<br/>  Timer1.tick()<br/>  sleep(1s)"]
+    subgraph Timer1["Timer: work (self-contained)"]
+        T1D["duration: 25min<br/>remaining: 24:30<br/>status: RUNNING"]
+        T1TH["_thread"]
+        T1EV["_stop_event"]
+        T1L["_run():<br/>while not stopped:<br/>  self.tick()<br/>  sleep(1s)"]
+        
+        T1TH --> T1L
+        T1EV -.->|controls| T1L
+        T1L -.->|decrements| T1D
     end
     
-    subgraph Thread2["Thread 2: pausa"]
-        L2["Loop infinito:<br/>while not Event2.is_set():<br/>  Timer2.tick()<br/>  sleep(1s)"]
+    subgraph Timer2["Timer: break (self-contained)"]
+        T2D["duration: 5min<br/>remaining: 4:30<br/>status: RUNNING"]
+        T2TH["_thread"]
+        T2EV["_stop_event"]
+        T2L["_run():<br/>while not stopped:<br/>  self.tick()<br/>  sleep(1s)"]
+        
+        T2TH --> T2L
+        T2EV -.->|controls| T2L
+        T2L -.->|decrements| T2D
     end
     
-    TH --> Thread1
-    TH --> Thread2
+    TM -->|reference| Timer1
+    TM -->|reference| Timer2
     
-    Thread1 -.->|decrementa| TM
-    Thread2 -.->|decrementa| TM
-    
-    EV -.->|controla| Thread1
-    EV -.->|controla| Thread2
-    
-    style Thread1 fill:#e1f5e1
-    style Thread2 fill:#e1f5e1
+    style Timer1 fill:#e1f5e1
+    style Timer2 fill:#e1f5e1
 ```
 
-### Sequência de execução
+### Sequence Diagrams
 
-#### Criando e iniciando múltiplos timers
+#### Creating and Starting Multiple Timers
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 Usuário
+    participant U as 👤 User
     participant UI as Terminal
     participant S as TimerService
-    participant T1 as Timer: trabalho
-    participant T2 as Timer: pausa
+    participant T1 as Timer: work
+    participant T2 as Timer: break
     participant TH1 as 🧵 Thread 1
     participant TH2 as 🧵 Thread 2
-    participant N as 🔔 Notificações
+    participant N as 🔔 Notifications
 
-    U->>UI: criar trabalho 25m
-    UI->>S: create_timer("trabalho", 25m)
+    U->>UI: criar work 25m
+    UI->>S: create_timer("work", 25m)
     S->>T1: new Timer(25m)
-    S->>S: _stop_events["trabalho"] = Event()
     
-    U->>UI: criar pausa 5m
-    UI->>S: create_timer("pausa", 5m)
+    U->>UI: criar break 5m
+    UI->>S: create_timer("break", 5m)
     S->>T2: new Timer(5m)
-    S->>S: _stop_events["pausa"] = Event()
     
-    U->>UI: iniciar trabalho
-    UI->>S: start_timer("trabalho")
+    U->>UI: iniciar work
+    UI->>S: start_timer("work")
     S->>T1: start()
-    T1->>N: on_start callback
-    N->>N: 🔊 toca som início
-    S->>TH1: Thread(target=_run_timer, args=("trabalho",))
+    T1->>T1: creates own _thread
+    T1->>TH1: Thread(target=self._run)
     activate TH1
-    TH1->>TH1: while not stopped
+    T1->>N: on_start callback
+    N->>N: 🔊 plays start sound
+    TH1->>TH1: internal _run() loop
     
-    U->>UI: iniciar pausa
-    UI->>S: start_timer("pausa")
+    U->>UI: iniciar break
+    UI->>S: start_timer("break")
     S->>T2: start()
-    T2->>N: on_start callback
-    N->>N: 🔊 toca som início
-    S->>TH2: Thread(target=_run_timer, args=("pausa",))
+    T2->>T2: creates own _thread
+    T2->>TH2: Thread(target=self._run)
     activate TH2
-    TH2->>TH2: while not stopped
+    T2->>N: on_start callback
+    N->>N: 🔊 plays start sound
+    TH2->>TH2: internal _run() loop
     
-    loop A cada 1 segundo
-        TH1->>T1: tick()
+    loop Every 1 second
+        TH1->>T1: self.tick()
         T1->>T1: remaining -= 1s
-        TH2->>T2: tick()
+        TH2->>T2: self.tick()
         T2->>T2: remaining -= 1s
     end
     
-    Note over TH2,T2: Pausa termina primeiro (5min)
+    Note over TH2,T2: Break finishes first (5min)
     T2->>T2: status = FINISHED
     T2->>N: on_end callback
-    N->>N: 🔊 toca som fim
+    N->>N: 🔊 plays end sound
     deactivate TH2
     
-    Note over TH1,T1: Trabalho continua (25min)
+    Note over TH1,T1: Work continues (25min)
     T1->>T1: status = FINISHED
     T1->>N: on_end callback
-    N->>N: 🔊 toca som fim
+    N->>N: 🔊 plays end sound
     deactivate TH1
 ```
 
-#### Pausando e retomando um timer
+#### Pausing and Resuming a Timer
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 Usuário
+    participant U as 👤 User
     participant UI as Terminal
     participant S as TimerService
-    participant T as Timer: trabalho
+    participant T as Timer: work
     participant TH as 🧵 Thread
 
     Note over T: Status: RUNNING<br/>Remaining: 15:00
 
-    U->>UI: pausar trabalho
-    UI->>S: pause_or_resume_timer("trabalho")
+    U->>UI: pausar work
+    UI->>S: pause_or_resume_timer("work")
     S->>T: pause()
     T->>T: status = PAUSED
     
-    Note over TH: Thread continua rodando,<br/>mas tick() retorna sem fazer nada
+    Note over TH: Thread continues running,<br/>but tick() returns without action
     
-    loop Thread ativa
+    loop Active thread
         TH->>T: tick()
-        T->>T: status != RUNNING, retorna
-        Note over T: Remaining: 15:00<br/>(não decrementa)
+        T->>T: status != RUNNING, returns
+        Note over T: Remaining: 15:00<br/>(no decrement)
     end
     
-    U->>UI: pausar trabalho (toggle)
-    UI->>S: pause_or_resume_timer("trabalho")
+    U->>UI: pausar work (toggle)
+    UI->>S: pause_or_resume_timer("work")
     S->>T: resume()
     T->>T: status = RUNNING
     
-    Note over TH: Thread volta a decrementar
+    Note over TH: Thread resumes decrementing
     
-    loop A cada 1s
+    loop Every 1s
         TH->>T: tick()
         T->>T: remaining -= 1s
     end
 ```
 
-## Desenvolvimento
+### Project Structure
 
-Rodar, formatar e validar:
-- Executar: `uv run task run` ou `uv run python main.py`
-- Formatação: `uvx ruff format`
-- Lint: `uvx ruff check`
-
-Testes (pytest):
-- `uv run pytest tests/ -v`
-- Dica: os testes executam com `FREETIMER_MUTE=1` para não tocar áudio.
-
-Estrutura do projeto (resumo):
 ```
 main.py
 src/
-	core/timer.py
-	services/timer_service.py
-	interfaces/
-		base_interface.py
-		terminal/
-			terminal.py
-			terminal_notification.py
-		notifications.py
-Assets/Sounds/*.mp3
+    core/
+        timer.py              # Self-contained timer with thread management
+    services/
+        timer_service.py      # Multiple timer coordinator
+        logger.py             # Logging utilities
+        parse_utils.py        # Time parsing utilities
+    interfaces/
+        base_interface.py     # Interface contract
+        notifications.py      # Notification abstraction
+        terminal/
+            terminal.py       # Terminal UI implementation
+            terminal_notification.py
+        gui/                  # Future GUI interface
+        web/                  # Future Web interface
+Assets/
+    Sounds/
+        clock-start.mp3       # Start notification sound
+        timer-terminer.mp3    # End notification sound
 tests/
-	conftest.py
-	test_timer.py
+    core/
+        test_timer.py
+    services/
+        test_logger.py
 ```
 
-## Empacotando em executável (opcional)
+## Development
 
-Com PyInstaller (Linux):
+### Running and Testing
+
+```bash
+# Run application
+uv run task run
+# or
+uv run python main.py
+
+# Format code
+uvx ruff format
+
+# Lint code
+uvx ruff check
+
+# Run tests
+uv run pytest tests/ -v
 ```
+
+> **Note**: Tests run with `FREETIMER_MUTE=1` to suppress audio during testing.
+
+### Code Quality
+
+The project follows these standards:
+- **Type hints**: All functions include type annotations
+- **Docstrings**: Descriptive documentation in English
+- **Logging**: Structured logging via `logger` (no `print()` statements)
+- **Testing**: Pytest with fixtures for clean test organization
+- **Linting**: Ruff for code style enforcement
+
+## Building Executable
+
+### Using PyInstaller (Linux)
+
+```bash
 uvx pyinstaller --onefile --name freetimer --console main.py \
-	--add-data "Assets/Sounds:Assets/Sounds"
+    --add-data "Assets/Sounds:Assets/Sounds"
 ```
-Depois, execute `./dist/freetimer`.
 
-Observação: para ambientes gráficos e Web, novas interfaces serão adicionadas no futuro. A atual documentação foca na interface de Terminal.
+Then run: `./dist/freetimer`
+
+### Platform Compatibility
+
+FreeTimer is designed to work across:
+- Linux (tested)
+- macOS
+- Windows
+
+## Roadmap
+
+- [x] Terminal interface with full functionality
+- [x] Audio notifications
+- [x] Multiple concurrent timers
+- [ ] GUI interface (PySide6)
+- [ ] Web interface
+- [ ] Configuration file support
+- [ ] Timer presets/templates
+- [ ] Export/import timer configurations
+
+## Contributing
+
+Contributions are welcome! Please ensure:
+- Code follows project style (use `ruff format` and `ruff check`)
+- All tests pass (`pytest tests/ -v`)
+- New features include tests
+- Documentation is updated
+
+## License
+
+MIT License - see LICENSE file for details
+
+---
+
+**Note**: GUI and Web interfaces are planned for future releases. Current documentation focuses on the Terminal interface.

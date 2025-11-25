@@ -1,9 +1,9 @@
 [project]
 name = "freetimer"
 version = "0.1.0"
-description = "Add your description here"
+description = "A simple, extensible timer application with clean architecture"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 dependencies = [
     "playsound3>=3.2.8",
     "pydantic>=2.12.3",

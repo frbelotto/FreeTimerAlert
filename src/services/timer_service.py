@@ -1,6 +1,5 @@
 from datetime import timedelta
-from typing import Dict
-import threading
+from typing import Dict, Callable
 from src.core.timer import Timer, TimerStatus
 from src.services.logger import get_logger
 
@@ -8,140 +7,149 @@ logger = get_logger(__name__)
 
 
 class TimerService:
-    """Serviço de gerenciamento e execução de timers.
+    """Timer management service.
     
-    Responsável por:
-    - Criar e armazenar timers
-    - Gerenciar threads de execução
-    - Controlar start/stop/pause de timers
+    Coordinates multiple named timers.
+    Each timer manages its own execution.
     """
 
     def __init__(self):
         self._timers: Dict[str, Timer] = {}
-        self._threads: Dict[str, threading.Thread] = {}
-        self._stop_events: Dict[str, threading.Event] = {}
-        self._lock = threading.Lock()
         
     def get_timer(self, name: str) -> Timer | None:
-        """Busca um timer pelo nome."""
+        """Retrieve a timer by name.
+        
+        Args:
+            name: Timer identifier.
+            
+        Returns:
+            Timer instance or None if not found.
+        """
         return self._timers.get(name)
 
     def create_timer(self, name: str, duration: timedelta) -> Timer:
-        """Cria um novo timer."""
+        """Create a new timer.
+        
+        Args:
+            name: Unique identifier for the timer.
+            duration: Timer duration.
+            
+        Returns:
+            Created Timer instance.
+            
+        Raises:
+            ValueError: If timer name already exists.
+        """
         if name in self._timers:
+            logger.error(f"Timer '{name}' already exists")
             raise ValueError(f"Timer '{name}' já existe")
         
         timer = Timer(duration=duration)
         self._timers[name] = timer
-        self._stop_events[name] = threading.Event()
+        logger.info(f"Timer '{name}' created with duration {duration}")
         return timer
 
     def list_timers(self) -> Dict[str, Timer]:
-        """Retorna todos os timers."""
+        """Return all timers.
+        
+        Returns:
+            Dictionary mapping timer names to Timer instances.
+        """
         return self._timers
 
     def start_timer(self, name: str) -> None:
-        """Inicia a execução de um timer em background."""
+        """Start timer execution.
+        
+        Args:
+            name: Timer identifier.
+            
+        Raises:
+            ValueError: If timer does not exist.
+        """
         timer = self.get_timer(name)
         if not timer:
+            logger.error(f"Cannot start: timer '{name}' does not exist")
             raise ValueError(f"Timer '{name}' não existe")
-        
-        with self._lock:
-            # Verifica se já está rodando
-            if name in self._threads and self._threads[name].is_alive():
-                logger.warning(f"Timer '{name}' já está em execução")
-                return
-            
-            # Prepara para iniciar
-            self._stop_events[name].clear()
-            timer.start()
-            
-            # Cria e inicia thread
-            thread = threading.Thread(target=self._run_timer, args=(name,), daemon=True)
-            self._threads[name] = thread
-            thread.start()
-            logger.info(f"Timer '{name}' iniciado: {timer.duration}")
+        timer.start()
+        logger.debug(f"Start command issued for timer '{name}'")
 
     def stop_timer(self, name: str) -> None:
-        """Para completamente um timer."""
+        """Completely stop a timer.
+        
+        Args:
+            name: Timer identifier.
+            
+        Raises:
+            ValueError: If timer does not exist.
+        """
         timer = self.get_timer(name)
         if not timer:
+            logger.error(f"Cannot stop: timer '{name}' does not exist")
             raise ValueError(f"Timer '{name}' não existe")
-        
-        with self._lock:
-            if name not in self._threads or not self._threads[name].is_alive():
-                logger.warning(f"Timer '{name}' não está em execução")
-                return
-            
-            # Sinaliza para parar
-            self._stop_events[name].set()
-            timer.stop()
-        
-        # Aguarda thread terminar
-        if name in self._threads:
-            self._threads[name].join(timeout=2.0)
-            logger.info(f"Timer '{name}' parado")
+        timer.stop()
+        logger.debug(f"Stop command issued for timer '{name}'")
 
     def pause_or_resume_timer(self, name: str) -> None:
-        """Pausa ou retoma um timer."""
+        """Pause or resume a timer.
+        
+        Args:
+            name: Timer identifier.
+            
+        Raises:
+            ValueError: If timer does not exist.
+        """
         timer = self.get_timer(name)
         if not timer:
+            logger.error(f"Cannot pause/resume: timer '{name}' does not exist")
             raise ValueError(f"Timer '{name}' não existe")
         
         if timer.status == TimerStatus.PAUSED:
             timer.resume()
-            logger.info(f"Timer '{name}' retomado")
+            logger.debug(f"Resume command issued for timer '{name}'")
         else:
             timer.pause()
-            logger.info(f"Timer '{name}' pausado")
+            logger.debug(f"Pause command issued for timer '{name}'")
 
     def reset_timer(self, name: str) -> None:
-        """Reseta um timer para duração original."""
+        """Reset a timer to its original duration.
+        
+        Args:
+            name: Timer identifier.
+            
+        Raises:
+            ValueError: If timer does not exist.
+        """
         timer = self.get_timer(name)
         if not timer:
+            logger.error(f"Cannot reset: timer '{name}' does not exist")
             raise ValueError(f"Timer '{name}' não existe")
-        
-        # Para se estiver rodando
-        if name in self._threads and self._threads[name].is_alive():
-            self.stop_timer(name)
-        
         timer.reset()
-        logger.info(f"Timer '{name}' resetado")
+        logger.debug(f"Reset command issued for timer '{name}'")
 
     def add_time(self, name: str, duration: timedelta) -> None:
-        """Adiciona tempo extra a um timer."""
+        """Add extra time to a timer.
+        
+        Args:
+            name: Timer identifier.
+            duration: Extra time to add.
+            
+        Raises:
+            ValueError: If timer does not exist.
+        """
         timer = self.get_timer(name)
         if not timer:
+            logger.error(f"Cannot add time: timer '{name}' does not exist")
             raise ValueError(f"Timer '{name}' não existe")
-        
         timer.add_time(duration)
-        logger.info(f"Adicionado {duration} ao timer '{name}'")
-
-    def _run_timer(self, name: str) -> None:
-        """Loop de execução de um timer (roda em thread dedicada)."""
-        timer = self._timers[name]
-        stop_event = self._stop_events[name]
-        
-        try:
-            while not stop_event.is_set():
-                if timer.status == TimerStatus.RUNNING:
-                    timer.tick(seconds=1)
-                    
-                    if timer.status == TimerStatus.FINISHED:
-                        logger.info(f"Timer '{name}' finalizado")
-                        break
-                
-                # Aguarda 1 segundo
-                stop_event.wait(timeout=1.0)
-                
-        except Exception as e:
-            logger.error(f"Erro na execução do timer '{name}': {e}", exc_info=True)
-        finally:
-            logger.debug(f"Thread do timer '{name}' encerrada")
+        logger.debug(f"Added {duration} to timer '{name}'")
 
     @property
-    def available_services(self):
-        """Retorna os serviços disponíveis."""
+    def available_services(self) -> dict[str, Callable]:
+        """Return available services.
+        
+        Returns:
+            Dictionary mapping service descriptions to their callable methods.
+        """
         return {
             "Criar : Criar timers (nome, duração)": self.create_timer,
             "Listar : Listar timers": self.list_timers,
