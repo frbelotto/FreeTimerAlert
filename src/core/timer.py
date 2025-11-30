@@ -1,10 +1,10 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from datetime import timedelta
 import time
-from typing import Callable, Any
+from typing import Callable
 from enum import StrEnum, auto
 import threading
-from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
 from src.services.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,6 +19,7 @@ class TimerStatus(StrEnum):
     FINISHED: Countdown reached zero naturally.
     STOPPED: Timer was manually stopped before finishing or due to error.
     """
+
     IDLE = auto()
     RUNNING = auto()
     PAUSED = auto()
@@ -26,7 +27,8 @@ class TimerStatus(StrEnum):
     STOPPED = auto()
 
 
-class Timer(BaseModel):
+@dataclass
+class Timer:
     """Thread-based countdown timer.
 
     Manages its own background thread. Once started it decrements the remaining
@@ -34,43 +36,39 @@ class Timer(BaseModel):
     (STOPPED). Thread-safe operations are guarded by an internal lock. Callbacks
     may be provided for start and natural end events.
     """
-    
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    
-    duration: timedelta
-    status: TimerStatus = Field(default=TimerStatus.IDLE)
-    on_start: list[Callable[[Timer], None]] = Field(default_factory=list)
-    on_end: list[Callable[[Timer], None]] = Field(default_factory=list)
-    
-    _remaining: timedelta = PrivateAttr()  # Remaining timer time (continuously updated)
-    _thread: threading.Thread | None = PrivateAttr(default=None)  # Background thread that executes the timer loop
-    _stop_event: threading.Event = PrivateAttr(default_factory=threading.Event)  # Thread-safe flag: main thread sets it → background thread reads it and stops gracefully
-    _lock: threading.Lock = PrivateAttr(default_factory=threading.Lock)  # Lock to guarantee thread-safety when accessing/modifying _remaining
-    _last_update_monotonic: float = PrivateAttr(default=0.0)  # Last update timestamp (time.monotonic() is not affected by OS clock adjustments)
-    _resolution_seconds: float = PrivateAttr(default=0.1)  # Loop interval: controls precision vs CPU usage (0.1s = 10 updates/second)
- 
-    def model_post_init(self, __context: Any) -> None:
-        """Initialize private attributes after model construction."""
-        self._remaining = self.duration
 
-    @field_validator("duration")
-    def validate_positive(cls, duration: timedelta) -> timedelta:
-        """Validate that initial duration is strictly positive."""
-        if duration <= timedelta(0):
+    duration: timedelta
+    status: TimerStatus = TimerStatus.IDLE
+    on_start: list[Callable[[Timer], None]] = field(default_factory=list)
+    on_end: list[Callable[[Timer], None]] = field(default_factory=list)
+
+    # Private attributes (not part of __init__ signature)
+    _remaining: timedelta = field(init=False, repr=False)  # Remaining timer time (continuously updated)
+    _thread: threading.Thread | None = field(default=None, init=False, repr=False)  # Background thread that executes the timer loop
+    _stop_event: threading.Event = field(
+        default_factory=threading.Event, init=False, repr=False
+    )  # Thread-safe flag: main thread sets it → background thread reads it and stops gracefully
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)  # Lock to guarantee thread-safety when accessing/modifying _remaining
+    _last_update_monotonic: float = field(default=0.0, init=False, repr=False)  # Last update timestamp (time.monotonic() is not affected by OS clock adjustments)
+    _resolution_seconds: float = field(default=0.1, init=False, repr=False)  # Loop interval: controls precision vs CPU usage (0.1s = 10 updates/second)
+
+    def __post_init__(self) -> None:
+        """Initialize private attributes and validate duration after dataclass construction."""
+        if self.duration <= timedelta(0):
             raise ValueError("duration must be > 0")
-        return duration
+        self._remaining = self.duration
 
     @property
     def remaining(self) -> timedelta:
         """Return remaining countdown time."""
         with self._lock:  # Acquires lock before reading _remaining (ensures thread is not modifying simultaneously)
             return self._remaining
-    
+
     @property
     def running(self) -> bool:
         """Return True if the timer is actively running."""
         return self.status == TimerStatus.RUNNING
-    
+
     @property
     def is_active(self) -> bool:
         """Check if the internal execution thread is alive."""
@@ -174,8 +172,10 @@ class Timer(BaseModel):
             self._remaining += extra
         logger.info(f"Extra time added: {extra}")
 
-    def tick(self, seconds: int = 1) -> None:
+    def _tick(self, seconds: int = 1) -> None:
         """Perform a tick decrementing remaining time.
+
+        Internal method called by background thread.
 
         Args:
             seconds: Number of seconds to subtract.

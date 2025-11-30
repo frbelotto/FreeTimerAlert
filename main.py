@@ -1,93 +1,76 @@
-from enum import Enum
-from typing import Dict, Type
-from src.services.logger import get_logger, setup_logging
-from src.interfaces.base_interface import TimerInterface
-import importlib
+"""FreeTimer - Simple terminal-based timer application.
 
-# Configura o logger global para o módulo
+Usage:
+    python main.py [--debug] [--mute]
+
+Options:
+    --debug     Enable debug logging
+    --mute      Disable sound notifications
+"""
+
+import argparse
+import logging
+from os import environ
+from src.services.logger import get_logger
+from src.terminal.interface import TerminalInterface
+
 logger = get_logger(__name__)
 
 
-class Interfaces(Enum):
-    """Define as interfaces disponíveis no sistema.
+def parse_arguments() -> argparse.Namespace:
+    """Parse command-line arguments.
 
-    Cada membro do enum armazena uma tupla (caminho_do_modulo, nome_da_classe).
-    Use get_class() para obter a classe da interface e create() para instanciar.
+    Returns:
+        Parsed arguments namespace.
     """
+    parser = argparse.ArgumentParser(
+        description="FreeTimer - Terminal-based timer application",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python main.py              # Run with default settings
+  python main.py --debug      # Run with debug logging
+  python main.py --mute       # Run without sound notifications
+        """,
+    )
 
-    TERMINAL = ("src.interfaces.terminal.terminal", "TerminalInterface")
-    # WEB = ("src.interfaces.web.gui", "WebInterface")
-    # GUI = ("src.interfaces.gui.gui", "GuiInterface")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
-    def get_class(self) -> Type[TimerInterface]:
-        """Retorna a classe da interface (sem instanciar)"""
+    parser.add_argument("--mute", action="store_true", help="Disable sound notifications")
 
-        module_path, class_name = self.value
-        try:
-            module = importlib.import_module(module_path)
-            return getattr(module, class_name)
-        except ImportError as e:
-            raise NotImplementedError(f"Interface {self.name} não disponível: {e}")
-        except AttributeError:
-            raise NotImplementedError(f"Classe {class_name} não encontrada em {module_path}")
-
-
-class InterfaceManager:
-    """Gerencia as interfaces disponíveis e suas execuções (lazy loading)"""
-
-    def __init__(self):
-        self._interfaces: Dict[Interfaces, TimerInterface] = {}  # Cache de instâncias já criadas
-
-    def show_interface_menu(self) -> None:
-        """Exibe o menu de seleção de interface"""
-        logger.info("\n🕒 FreeTimer - Selecione a Interface:")
-        for i, interface in enumerate(Interfaces, 1):
-            logger.info(f"{i}. {interface.name.title()}")
-        logger.info("q. Sair")
-
-    def get_interface(self, interface_type: Interfaces) -> TimerInterface:
-        """Retorna uma interface, criando-a se necessário (lazy loading)"""
-        if interface_type not in self._interfaces:
-            interface_class = interface_type.get_class()
-            self._interfaces[interface_type] = interface_class()
-        return self._interfaces[interface_type]
+    return parser.parse_args()
 
 
-def run_interface() -> None:
-    """Executa a interface selecionada pelo usuário"""
-    manager = InterfaceManager()
+def setup_environment(args: argparse.Namespace) -> None:
+    """Configure environment based on arguments.
 
-    while True:
-        manager.show_interface_menu()
-        choice = input("\nEscolha uma opção: ").lower().strip()
+    Args:
+        args: Parsed command-line arguments.
+    """
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug("Debug logging enabled")
 
-        if choice == "q":
-            logger.info("👋 Encerrando o programa...")
-            break
+    if args.mute:
+        environ["FREETIMER_MUTE"] = "1"
+        logger.info("Sound notifications disabled")
 
-        try:
-            interface_num = int(choice)
-            interface = list(Interfaces)[interface_num - 1]
-            logger.info(f"Iniciando interface {interface.name}")
 
-            # Obtém e executa a interface (cria apenas quando necessário)
-            interface_obj = manager.get_interface(interface)
-            interface_obj.run()
+def run() -> None:
+    """Execute application main loop."""
+    args = parse_arguments()
+    setup_environment(args)
 
-        except ValueError:
-            logger.error("⚠️ Entrada inválida, por favor, digite um número válido ou 'q' para sair.")
-        except IndexError:
-            logger.error("⚠️ Opção inválida. Escolha uma das opções disponíveis.")
-        except NotImplementedError as e:
-            logger.warning(str(e))
-            logger.warning("⚠️ Esta interface ainda não está disponível.")
-        except Exception as e:
-            logger.error(f"Erro inesperado: {str(e)}")
-            logger.error("❌ Ocorreu um erro inesperado.")
+    try:
+        logger.info("Starting FreeTimer (Terminal)")
+        app = TerminalInterface()
+        app.run()
+    except KeyboardInterrupt:
+        logger.info("\n👋 Shutting down...")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        logger.error("❌ An unexpected error occurred.")
 
 
 if __name__ == "__main__":
-    # Configura o logger antes de qualquer uso
-    setup_logging()
-    logger.info("Iniciando FreeTimer")
-    run_interface()
+    run()

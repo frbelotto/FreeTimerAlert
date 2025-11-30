@@ -28,13 +28,13 @@ class TestLoggerService:
         """Verifica que o setup do logger é executado na criação."""
         # Força nova instância (limpa o singleton para teste)
         LoggerService._instance = None
-        
+
         instance = LoggerService()
         root_logger = logging.getLogger()
-        
+
         # Verifica que há pelo menos um handler
         assert len(root_logger.handlers) > 0
-        
+
         # Verifica o nível configurado
         assert root_logger.level == logging.INFO
 
@@ -42,10 +42,10 @@ class TestLoggerService:
         """Verifica que o logger tem um StreamHandler configurado."""
         LoggerService._instance = None
         instance = LoggerService()
-        
+
         root_logger = logging.getLogger()
         handlers = root_logger.handlers
-        
+
         # Verifica que há um StreamHandler
         assert any(isinstance(h, logging.StreamHandler) for h in handlers)
 
@@ -53,10 +53,10 @@ class TestLoggerService:
         """Verifica que o formatter está configurado."""
         LoggerService._instance = None
         instance = LoggerService()
-        
+
         root_logger = logging.getLogger()
         handler = root_logger.handlers[0]
-        
+
         # Verifica que o handler tem formatter
         assert handler.formatter is not None
 
@@ -73,7 +73,7 @@ class TestGetLogger:
         """Verifica que get_logger retorna loggers diferentes para nomes diferentes."""
         logger1 = get_logger("module1")
         logger2 = get_logger("module2")
-        
+
         assert logger1.name == "module1"
         assert logger2.name == "module2"
         assert logger1 is not logger2
@@ -82,7 +82,7 @@ class TestGetLogger:
         """Verifica que get_logger retorna a mesma instância para o mesmo nome."""
         logger1 = get_logger("test")
         logger2 = get_logger("test")
-        
+
         assert logger1 is logger2
 
 
@@ -95,21 +95,21 @@ class TestLoggerMethods:
         # Limpa e reconfigura o singleton
         LoggerService._instance = None
         LoggerService()
-        
+
         # Cria um logger para teste
         self.logger = get_logger("test_logger")
-        
+
         # Captura a saída do logger
         self.log_capture = StringIO()
         self.test_handler = logging.StreamHandler(self.log_capture)
         self.test_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-        
+
         # Adiciona handler de teste ao root logger
         root = logging.getLogger()
         root.addHandler(self.test_handler)
-        
+
         yield
-        
+
         # Cleanup
         root.removeHandler(self.test_handler)
 
@@ -135,7 +135,7 @@ class TestLoggerMethods:
         """Verifica que o método .debug() funciona."""
         # Define nível DEBUG para o root logger
         logging.getLogger().setLevel(logging.DEBUG)
-        
+
         self.logger.debug("Test debug message")
         output = self.log_capture.getvalue()
         assert "Test debug message" in output
@@ -145,7 +145,7 @@ class TestLoggerMethods:
         self.logger.info("Message 1")
         self.logger.error("Message 2")
         self.logger.warning("Message 3")
-        
+
         output = self.log_capture.getvalue()
         assert "Message 1" in output
         assert "Message 2" in output
@@ -159,15 +159,15 @@ class TestLoggerIntegration:
         """Simula o uso do logger como no módulo timer."""
         # Limpa singleton
         LoggerService._instance = None
-        
+
         # Simula import e uso no timer.py
         logger = get_logger(__name__)
-        
+
         # Captura saída
         log_capture = StringIO()
         handler = logging.StreamHandler(log_capture)
         logging.getLogger().addHandler(handler)
-        
+
         try:
             # Simula callback com erro
             logger.error("Erro no callback: Test exception")
@@ -180,17 +180,17 @@ class TestLoggerIntegration:
         """Testa logger dentro de um exception handler."""
         LoggerService._instance = None
         logger = get_logger("exception_test")
-        
+
         log_capture = StringIO()
         handler = logging.StreamHandler(log_capture)
         logging.getLogger().addHandler(handler)
-        
+
         try:
             try:
                 raise ValueError("Test exception")
             except Exception as e:
                 logger.error(f"Erro capturado: {e}")
-            
+
             output = log_capture.getvalue()
             assert "Erro capturado: Test exception" in output
         finally:

@@ -16,10 +16,12 @@ from src.core.timer import Timer
 def timer_factory() -> callable:
     """Return a factory function that creates a Timer with given seconds.
 
-    Simplifica criação de timers com durações variadas nos testes.
+    Simplifies timer creation with varying durations in tests.
     """
+
     def _create(seconds: float = 1.0) -> Timer:  # Factory simples
         return Timer(duration=timedelta(seconds=seconds))
+
     return _create
 
 
@@ -41,9 +43,9 @@ def running_timer(timer_factory) -> Timer:
 def finished_timer(timer_factory) -> Timer:
     """Return a Timer that has already finished naturally.
 
-    Útil para testar estados finais sem esperar longos períodos.
+    Useful for testing final states without waiting long periods.
     """
-    t = timer_factory(seconds=0.3)
+    t = timer_factory(seconds=0.6)  # Adjusted for 0.5s resolution
     t.start()
-    time.sleep(0.5)  # Aguarda finalização
+    time.sleep(1.5)  # Aguarda finalização com margem
     return t

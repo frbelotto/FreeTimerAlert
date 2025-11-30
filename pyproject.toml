@@ -1,13 +1,12 @@
 [project]
 name = "freetimer"
-version = "0.1.0"
-description = "A simple, extensible timer application with clean architecture"
+version = "0.2.0"
+description = "Simple terminal-based timer application with clean architecture"
 readme = "README.md"
-requires-python = ">=3.10"
+license = { text = "CC-BY-NC-SA-4.0" }
+requires-python = ">=3.11"
 dependencies = [
     "playsound3>=3.2.8",
-    "pydantic>=2.12.3",
-    "pyside6>=6.10.0",
     "rich>=14.2.0",
 ]
 
@@ -16,7 +15,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ipykernel>=7.0.1",
     "pytest>=8.3.4",
     "taskipy>=1.14.1",
 ]
