@@ -8,12 +8,12 @@ from __future__ import annotations
 from datetime import timedelta
 import time
 import pytest
-
+from typing import Callable
 from src.core.timer import Timer
 
 
 @pytest.fixture
-def timer_factory() -> callable:
+def timer_factory() -> Callable[[float], Timer]:
     """Return a factory function that creates a Timer with given seconds.
 
     Simplifies timer creation with varying durations in tests.

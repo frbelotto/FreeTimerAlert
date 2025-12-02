@@ -1,10 +1,10 @@
-"""Testes para o módulo logger.
+"""Logger module testing.
 
-Este módulo testa:
-- Singleton pattern do LoggerService
-- Configuração correta do logger
-- Função get_logger retorna logging.Logger
-- Métodos de logging (.info, .error, .warning, .debug) funcionam
+This module tests:
+- Singleton pattern of LoggerService
+- Correct logger configuration
+- get_logger function returns logging.Logger
+- Logging methods (.info, .error, .warning, .debug) work
 """
 
 import logging

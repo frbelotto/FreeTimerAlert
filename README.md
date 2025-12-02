@@ -31,7 +31,7 @@ FreeTimer is a lightweight, terminal-based timer application with a clean archit
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.11 or higher
 - [uv](https://github.com/astral-sh/uv) (recommended) or pip
 
 ### Installation
@@ -101,7 +101,7 @@ Time remaining: 0:24:59
 - **End sound**: `Assets/Sounds/timer-terminer.mp3`
 - **Disable audio**: Use `--mute` flag
 
-> **Note**: If your system lacks an audio backend (ALSA/PulseAudio), the application will continue to work and log a warning when attempting to play sounds.
+> **Note**: If your system lacks an audio backend (ALSA/PulseAudio on Linux), the application will continue to work and log a warning when attempting to play sounds. On Linux, you may need to install `gobject` and `cairo` development libraries if `playsound3` requires them.
 
 ## Command-Line Options
 
