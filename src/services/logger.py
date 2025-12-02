@@ -1,50 +1,68 @@
+"""Logging service using Singleton pattern.
+
+Provides centralized logging configuration as a single service for the entire application.
+"""
+
+from __future__ import annotations
+
 import logging
 
 
-def setup_logging(log_level: int = logging.INFO, log_file: str = "freetimer.log") -> None:
+class LoggerService:
+    """Singleton service for centralized logging management.
+
+    Ensures a single logging configuration exists throughout the application lifecycle.
+    Each module can request its own named logger while sharing the same root configuration.
     """
-    Configura o sistema de logging com dois handlers:
-    - Console: Mostra apenas a mensagem de forma limpa
-    - Arquivo: Registra logs detalhados com timestamp e nível
 
-    Args:
-        log_level: Nível de logging (default: logging.INFO)
-        log_file: Nome do arquivo de log (default: freetimer.log)
-    """
-    # Configura o logger raiz
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
+    _instance: LoggerService | None = None
 
-    # Remove handlers existentes para evitar duplicação
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
+    def __new__(cls) -> LoggerService:
+        """Implement Singleton pattern.
 
-    # 1. Handler para Console (formato simples)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)
-    console_formatter = logging.Formatter("%(message)s")  # Apenas a mensagem
-    console_handler.setFormatter(console_formatter)
-    root_logger.addHandler(console_handler)
+        Always returns the same instance, ensuring single logging service.
 
-    # 2. Handler para Arquivo (formato detalhado)
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(log_level)
-    file_formatter = logging.Formatter(
-        fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    file_handler.setFormatter(file_formatter)
-    root_logger.addHandler(file_handler)
+        Returns:
+            The singleton LoggerService instance.
+        """
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._setup_root_logger()
+        return cls._instance
+
+    def _setup_root_logger(self) -> None:
+        """Configure root logger for the application.
+
+        Sets INFO level and simple console output formatting.
+        """
+        root = logging.getLogger()
+        root.setLevel(logging.INFO)
+        root.handlers.clear()
+
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        root.addHandler(handler)
+
+    def get_logger(self, name: str) -> logging.Logger:
+        """Get a named logger instance.
+
+        Args:
+            name: Logger name (typically __name__ from calling module).
+
+        Returns:
+            Named Logger instance.
+        """
+        return logging.getLogger(name)
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Retorna um logger configurado para o módulo especificado.
+    """Convenience function to get logger from singleton service.
 
     Args:
-        name: Nome do módulo/componente para o logger
+        name: Logger name (typically __name__ from calling module).
 
     Returns:
-        logging.Logger: Logger configurado
+        Named Logger instance from the singleton LoggerService.
     """
-    return logging.getLogger(name)
+    service = LoggerService()  # Always returns the same instance
+    return service.get_logger(name)
