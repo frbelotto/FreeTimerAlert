@@ -18,11 +18,16 @@ dev = [
     "pytest>=8.3.4",
     "taskipy>=1.14.1",
 ]
+build = [
+    "pyinstaller>=6.11.1",
+]
 
 [tool.taskipy.tasks]
 format = 'uvx ruff format'
-run = "python main.py"
+run = "python -m src"
+gui = "python -m src --gui"
 test = "pytest tests/ -v"
+build = "python build.py"
 
 
 [tool.pytest.ini_options]

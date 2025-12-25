@@ -18,7 +18,7 @@ def get_sound_path(filename: str) -> Path:
     Returns:
         Absolute path to sound file.
     """
-    base = Path(__file__).resolve().parents[2]  # .../FreeTimerAlert
+    base = Path(__file__).resolve().parents[3]  # .../FreeTimerAlert
     return base / "Assets" / "Sounds" / filename
 
 

@@ -1,12 +1,12 @@
 # FreeTimer
 
-> Simple terminal-based timer application with clean architecture
+> Simple timer application with clean architecture - Terminal and GUI interfaces
 
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
 
-FreeTimer is a lightweight, terminal-based timer application with a clean architecture designed for simplicity and ease of use. Perfect for Pomodoro technique, time management, or any task requiring multiple concurrent timers.
+FreeTimer is a lightweight timer application with a clean architecture designed for simplicity and ease of use. Available as both terminal and desktop GUI interfaces. Perfect for Pomodoro technique, time management, or any task requiring multiple concurrent timers.
 
 ## Table of Contents
 
@@ -19,13 +19,14 @@ FreeTimer is a lightweight, terminal-based timer application with a clean archit
 
 ## Features
 
+- 🖥️ **Multiple interfaces** - Choose between terminal CLI or desktop GUI
 - ⏱️ **Multiple concurrent timers** - Run several timers simultaneously with independent controls
 - 🎯 **Simple time format** - Support for seconds, minutes, hours (e.g., `90`, `45m`, `1h30m`)
 - 🔊 **Audio notifications** - Sound alerts when timers start and finish
 - 🧵 **Thread-based execution** - Each timer runs in its own thread for true concurrency
 - 🎨 **Clean architecture** - Simple, well-organized codebase
 - 🔇 **Mute support** - Optional audio muting via command-line flag
-- 🐍 **Lightweight** - Minimal dependencies
+- 🐍 **Lightweight** - Minimal dependencies (Tkinter is Python standard library)
 
 ## Quick Start
 
@@ -44,15 +45,72 @@ cd FreeTimerAlert
 # Install dependencies
 uv sync
 
-# Run the application
-uv run python main.py
+# Run with unified entry point (recommended)
+python -m src              # Terminal interface
+python -m src --gui        # GUI interface
+
+# Or use legacy entry points
+python main.py             # Terminal interface
+python gui.py              # GUI interface
 ```
 
 ## Usage
 
+FreeTimer provides two interfaces: **Terminal** (CLI) and **Desktop GUI**. Choose the one that best fits your workflow.
+
+### Unified Entry Point (Recommended)
+
+```bash
+# Terminal interface (default)
+python -m src
+python -m src --debug --mute
+
+# GUI interface
+python -m src --gui
+python -m src --gui --debug
+```
+
+### Desktop GUI Interface
+
+```bash
+# Modern way
+python -m src --gui
+
+# With options
+python gui.py --debug
+python gui.py --mute
+```
+
+The GUI provides:
+- Visual list of all active timers
+- Click-based controls (create, start, pause, reset, remove)
+- Real-time timer updates
+- Desktop notifications
+- Intuitive interface for casual users
+
+**Status**: 🚧 In development (basic window implemented)
+
 ### Terminal Interface
 
-The application runs entirely in the terminal. Use the following commands:
+```bash
+# Modern way
+python -m src
+
+# Legacy way (still supported)
+python main.py
+
+# With options
+python -m src --debug --mute
+```
+
+The terminal interface provides:
+
+- Command-based interaction
+- Full control via keyboard
+- Lightweight and fast
+- Perfect for SSH/remote sessions
+
+**Commands:**
 
 | Command | Arguments | Description |
 |---------|-----------|-------------|
@@ -105,31 +163,28 @@ Time remaining: 0:24:59
 
 ## Command-Line Options
 
-```bash
-python main.py [OPTIONS]
-```
-
-### Available Options
+The unified entry point supports the following options:
 
 | Option | Description |
 |--------|-------------|
+| `--gui` | Launch GUI interface (default: terminal) |
 | `--debug` | Enable debug logging output |
 | `--mute` | Disable sound notifications |
 
 ### Examples
 
 ```bash
-# Run with default settings
-python main.py
+# Terminal interface (default)
+python -m src
+python -m src --debug --mute
 
-# Run with debug logging
+# GUI interface
+python -m src --gui
+python -m src --gui --debug
+
+# Legacy entry points (backward compatible)
 python main.py --debug
-
-# Run without sound notifications
-python main.py --mute
-
-# Combine multiple options
-python main.py --debug --mute
+python gui.py --mute
 ```
 
 ## Architecture
@@ -151,10 +206,16 @@ FreeTimer follows a clean layered architecture with clear separation of concerns
 - **Methods**: `create_timer()`, `start_timer()`, `stop_timer()`, `pause_or_resume_timer()`, `remove_timer()`
 - **Delegates**: Forwards commands to individual timers
 
-#### **Terminal Interface** (`src/terminal/interface.py`)
-- **Responsibility**: User interaction and command processing
+#### **Terminal Interface** (`src/interfaces/terminal/interface.py`)
+- **Responsibility**: User interaction and command processing via CLI
 - **Uses**: match/case statements for command routing
 - **Configures**: Sound notification callbacks during timer creation
+
+#### **GUI Interface** (`src/interfaces/gui/main_window.py`)
+- **Responsibility**: Desktop graphical user interface
+- **Uses**: Tkinter for cross-platform GUI
+- **Status**: 🚧 In development
+- **Reuses**: Same `TimerService` and `Timer` core logic
 
 #### **Notifications** (`src/terminal/notifications.py`)
 - **Functional module**: Uses simple functions instead of classes
@@ -202,42 +263,55 @@ flowchart TB
 ### Project Structure
 
 ```
-main.py                   # Entry point with CLI argument parsing
 src/
+    __main__.py             # Unified entry point (NEW!)
     core/
-        timer.py          # Self-contained timer (dataclass + threading)
+        timer.py            # Self-contained timer (dataclass + threading)
     services/
-        timer_service.py  # Multiple timer coordinator
-        logger.py         # Logging configuration (functional)
-        parse_utils.py    # Time parsing utilities
-    terminal/
-        interface.py      # Terminal UI implementation
-        notifications.py  # Sound notification functions
+        timer_service.py    # Multiple timer coordinator
+        logger.py           # Logging configuration (functional)
+        parse_utils.py      # Time parsing utilities
+    interfaces/
+        terminal/
+            interface.py    # Terminal UI implementation
+            notifications.py # Sound notification functions
+        gui/
+            main_window.py  # GUI main window (Tkinter)
+            timer_widget.py # Timer display widget
+            dialogs.py      # Dialog windows
+main.py                     # Legacy terminal entry point
+gui.py                      # Legacy GUI entry point
+build.py                    # Executable builder script
 Assets/
     Sounds/
-        clock-start.mp3       # Start notification sound
-        timer-terminer.mp3    # End notification sound
+        clock-start.mp3         # Start notification sound
+        timer-terminer.mp3      # End notification sound
 tests/
     core/
-        test_timer.py         # Timer unit tests
-        conftest.py           # Pytest fixtures
+        test_timer.py           # Timer unit tests
+        conftest.py             # Pytest fixtures
     services/
-        test_logger.py        # Logger tests
-        test_timer_service.py # TimerService tests
-        test_parse_utils.py   # Time parsing tests
+        test_logger.py          # Logger tests
+        test_timer_service.py   # TimerService tests
+        test_parse_utils.py     # Time parsing tests
 ```
 
 ## Development
-
 ### Running and Testing
 
 ```bash
-# Run application
-uv run python main.py
+# Run terminal interface
+python -m src
+python -m src --debug --mute
 
-# Run with options
-uv run python main.py --debug
-uv run python main.py --mute
+# Run GUI interface
+python -m src --gui
+python -m src --gui --debug
+
+# Or using task runner
+uv run task run    # Terminal (python -m src)
+uv run task gui    # GUI (python -m src --gui)minal
+uv run task gui    # GUI
 
 # Format code
 uvx ruff format
@@ -253,6 +327,29 @@ uv run pytest tests/ -v --cov=src
 ```
 
 > **Note**: Tests run with `FREETIMER_MUTE=1` to suppress audio during testing.
+
+### Building Executable
+
+To create a standalone executable for distribution:
+
+```bash
+# Install build dependencies
+uv sync --group build
+
+# Build executable (creates dist/FreeTimer or dist/FreeTimer.exe)
+python build.py
+
+# Or using task runner
+uv run task build
+```
+
+The build process uses PyInstaller to create a single executable file that includes:
+- Python runtime
+- All dependencies
+- Sound assets
+- Application code
+
+**Executable location**: `dist/FreeTimer` (Linux/macOS) or `dist/FreeTimer.exe` (Windows)
 
 ### Code Quality
 

@@ -3,7 +3,7 @@
 from datetime import timedelta
 from src.services.timer_service import TimerService
 from src.services.parse_utils import parse_time
-from src.terminal.notifications import play_start_sound, play_end_sound
+from src.interfaces.terminal.notifications import play_start_sound, play_end_sound
 from rich import print
 
 
