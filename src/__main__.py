@@ -6,13 +6,13 @@ Main entry point for FreeTimer application.
 Supports both terminal and GUI interfaces.
 
 Usage:
-    python -m src [--gui] [--debug] [--mute]
+    python -m src [--terminal] [--debug] [--mute]
 
 Examples:
-    python -m src                # Terminal interface (default)
-    python -m src --gui          # GUI interface
-    python -m src --gui --debug  # GUI with debug logging
-    python -m src --mute         # Terminal without sound
+    python -m src                # GUI interface (default)
+    python -m src --terminal     # Terminal interface
+    python -m src --debug        # GUI with debug logging
+    python -m src --terminal --mute  # Terminal without sound
 """
 
 import argparse
@@ -34,9 +34,9 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--gui",
+        "--terminal",
         action="store_true",
-        help="Launch GUI interface (default: terminal)",
+        help="Launch terminal interface (default: GUI)",
     )
 
     parser.add_argument(
@@ -73,17 +73,17 @@ def main() -> None:
 
     # Launch appropriate interface
     try:
-        if args.gui:
-            logger.info("Starting FreeTimer GUI interface")
-            from src.interfaces.gui.main_window import run_gui
-
-            run_gui()
-        else:
+        if args.terminal:
             logger.info("Starting FreeTimer terminal interface")
             from src.interfaces.terminal.interface import TerminalInterface
 
             app = TerminalInterface()
             app.run()
+        else:
+            logger.info("Starting FreeTimer GUI interface")
+            from src.interfaces.gui.main_window import run_gui
+
+            run_gui()
     except KeyboardInterrupt:
         logger.info("\n👋 Application interrupted by user")
         sys.exit(0)

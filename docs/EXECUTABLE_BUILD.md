@@ -14,6 +14,31 @@ This project is structured to be easily converted to standalone executables usin
 
 ## 🚀 Quick Build
 
+### Prerequisites (System Dependencies)
+
+**All systems**: Tkinter support (for GUI)
+```bash
+# Debian/Ubuntu
+sudo apt-get install -y python3-tk binutils
+
+# Fedora/RHEL  
+sudo dnf install -y python3-tkinter binutils
+
+# Arch
+sudo pacman -S tk binutils
+
+# macOS (via Homebrew)
+brew install python-tk
+```
+
+**Important Notes:**
+- The executable requires Tcl/Tk to be installed on the **target system** where it will run
+- PyInstaller bundles Python code but not system libraries like Tcl/Tk
+- GUI requires a display server (X11/Wayland) - not available in headless/WSL environments without X Server
+- For WSL users without X Server: use `--terminal` flag instead
+
+### Build Steps
+
 ```bash
 # Install build dependencies
 uv sync --group build
@@ -24,8 +49,8 @@ python build.py
 
 The executable supports both interfaces:
 ```bash
-./dist/FreeTimer            # Terminal interface (default)
-./dist/FreeTimer --gui      # GUI interface
+./dist/FreeTimer            # GUI interface (default)
+./dist/FreeTimer --terminal # Terminal interface
 ./dist/FreeTimer --debug    # With debug logging
 ```
 
@@ -39,7 +64,7 @@ The executable supports both interfaces:
 ### PyInstaller Configuration (in `build.py`)
 
 ```python
--m src          # Use unified entry point (src/__main__.py)
+src/__main__.py  # Use unified entry point
 --onefile       # Single executable file
 --windowed      # No console window (GUI mode)
 --add-data      # Include Assets/Sounds folder
@@ -53,7 +78,7 @@ pyinstaller --name=FreeTimer \
             --onefile \
             --windowed \
             --add-data="Assets/Sounds:Assets/Sounds" \
-            -m src
+            src/__main__.py
 ```
 
 ## 🎯 Best Practices for Executable Conversion

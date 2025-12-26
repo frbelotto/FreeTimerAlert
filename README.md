@@ -2,6 +2,7 @@
 
 > Simple timer application with clean architecture - Terminal and GUI interfaces
 
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/frbelotto/FreeTimerAlert/releases)
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
@@ -19,14 +20,17 @@ FreeTimer is a lightweight timer application with a clean architecture designed 
 
 ## Features
 
-- 🖥️ **Multiple interfaces** - Choose between terminal CLI or desktop GUI
+- 🖥️ **Multiple interfaces** - Choose between terminal CLI or desktop GUI with full feature parity
 - ⏱️ **Multiple concurrent timers** - Run several timers simultaneously with independent controls
 - 🎯 **Simple time format** - Support for seconds, minutes, hours (e.g., `90`, `45m`, `1h30m`)
-- 🔊 **Audio notifications** - Sound alerts when timers start and finish
+- 🔊 **Audio notifications** - Sound alerts when timers start and finish (toggleable in GUI)
+- 🔔 **Desktop notifications** - Cross-platform system notifications when timers finish (Windows, macOS, Linux)
 - 🧵 **Thread-based execution** - Each timer runs in its own thread for true concurrency
-- 🎨 **Clean architecture** - Simple, well-organized codebase
-- 🔇 **Mute support** - Optional audio muting via command-line flag
+- 🎨 **Clean architecture** - Simple, well-organized codebase with clear separation of concerns
+- 🔇 **Mute support** - Optional audio muting via command-line flag or GUI toggle
 - 🐍 **Lightweight** - Minimal dependencies (Tkinter is Python standard library)
+- ⚡ **Real-time updates** - Dynamic refresh rates (100-500ms) based on remaining time
+- 🎨 **Color-coded status** - Visual indicators for running, paused, and finished timers
 
 ## Quick Start
 
@@ -34,6 +38,29 @@ FreeTimer is a lightweight timer application with a clean architecture designed 
 
 - Python 3.11 or higher
 - [uv](https://github.com/astral-sh/uv) (recommended) or pip
+- **Dependencies**: `playsound3` (audio), `rich` (terminal UI), `plyer` (system notifications)
+- **All systems**: Tcl/Tk libraries (required for GUI interface)
+  ```bash
+  # Debian/Ubuntu
+  sudo apt-get install -y python3-tk
+  
+  # Fedora/RHEL
+  sudo dnf install -y python3-tkinter
+  
+  # Arch
+  sudo pacman -S tk
+  
+  # macOS (via Homebrew)
+  brew install python-tk
+  ```
+- **Linux only**: `binutils` package (for building executables)
+  ```bash
+  sudo apt-get install -y binutils  # Debian/Ubuntu
+  sudo dnf install -y binutils      # Fedora/RHEL
+  sudo pacman -S binutils           # Arch
+  ```
+
+**Note for WSL users**: GUI interface requires X Server (VcXsrv, X410, or WSLg). If not configured, use terminal interface instead.
 
 ### Installation
 
@@ -46,8 +73,8 @@ cd FreeTimerAlert
 uv sync
 
 # Run with unified entry point (recommended)
-python -m src              # Terminal interface
-python -m src --gui        # GUI interface
+python -m src              # GUI interface (default)
+python -m src --terminal   # Terminal interface
 
 # Or use legacy entry points
 python main.py             # Terminal interface
@@ -61,34 +88,86 @@ FreeTimer provides two interfaces: **Terminal** (CLI) and **Desktop GUI**. Choos
 ### Unified Entry Point (Recommended)
 
 ```bash
-# Terminal interface (default)
+# GUI interface (default)
 python -m src
 python -m src --debug --mute
 
-# GUI interface
-python -m src --gui
-python -m src --gui --debug
+# Terminal interface
+python -m src --terminal
+python -m src --terminal --debug --mute
 ```
 
 ### Desktop GUI Interface
 
 ```bash
 # Modern way
-python -m src --gui
+python -m src
+
+# Legacy way (still supported)
+python gui.py
 
 # With options
-python gui.py --debug
-python gui.py --mute
+python -m src --debug --mute
+python gui.py --debug --mute
 ```
 
-The GUI provides:
-- Visual list of all active timers
-- Click-based controls (create, start, pause, reset, remove)
-- Real-time timer updates
-- Desktop notifications
-- Intuitive interface for casual users
+### Using the Compiled Executable
 
-**Status**: 🚧 In development (basic window implemented)
+After building with `python build.py`, you can run the standalone executable (see [Building Executable Guide](docs/EXECUTABLE_BUILD.md)):
+
+```bash
+# Navigate to the dist folder
+cd dist
+
+# Run GUI (default)
+./FreeTimer
+
+# Run Terminal interface
+./FreeTimer --terminal
+
+# With debug logging
+./FreeTimer --debug
+```
+
+**System Requirements:**
+- Tcl/Tk libraries must be installed on the target system
+- GUI requires X11/Wayland display server (not available in headless environments)
+- **WSL users**: Terminal interface works everywhere, GUI requires X Server setup
+
+**Status**: ✅ Fully functional
+
+The GUI provides a complete desktop experience with:
+
+**Core Features:**
+- ✅ **Visual timer management** - Real-time display of all active timers with color-coded status
+- ✅ **Intuitive controls** - Click-based interface for all timer operations
+- ✅ **Live updates** - Automatic refresh (100-500ms intervals based on remaining time)
+- ✅ **Status indicators** - Color-coded visual feedback (🟢 Running / ⏸️ Paused / ✅ Finished)
+- ✅ **Sound toggle** - Toolbar button to enable/disable audio notifications
+- ✅ **Desktop notifications** - System notifications when timers finish (cross-platform)
+- ✅ **Scrollable interface** - Manage unlimited timers with smooth scrolling
+- ✅ **Input validation** - Smart dialogs with error handling and helpful examples
+- ✅ **Keyboard shortcuts** - Enter to confirm, Escape to cancel
+- ✅ **Help system** - Built-in README viewer and About dialog
+
+**Components:**
+- **Timer Widget**: Individual display for each timer showing:
+  - Timer name, status, and remaining time (HH:MM:SS format)
+  - Duration information and progress
+  - Control buttons: Start, Pause, Reset, Delete
+  - Color-coded frame based on timer state
+
+- **Create Timer Dialog**: User-friendly input with:
+  - Name validation (non-empty, unique)
+  - Time format helper text with examples
+  - Real-time validation feedback
+  - Multiple format support (90, 45m, 1h30m, 30s)
+
+- **Main Window**: Central interface featuring:
+  - Toolbar with Create Timer and Sound Toggle buttons
+  - Scrollable canvas for timer list
+  - Menu bar with File and Help options
+  - Status indicators and system integration
 
 ### Terminal Interface
 
@@ -167,24 +246,24 @@ The unified entry point supports the following options:
 
 | Option | Description |
 |--------|-------------|
-| `--gui` | Launch GUI interface (default: terminal) |
+| `--terminal` | Launch terminal interface (default is GUI) |
 | `--debug` | Enable debug logging output |
 | `--mute` | Disable sound notifications |
 
 ### Examples
 
 ```bash
-# Terminal interface (default)
+# GUI interface (default)
 python -m src
 python -m src --debug --mute
 
-# GUI interface
-python -m src --gui
-python -m src --gui --debug
+# Terminal interface
+python -m src --terminal
+python -m src --terminal --debug --mute
 
 # Legacy entry points (backward compatible)
-python main.py --debug
-python gui.py --mute
+python main.py --debug --mute
+python gui.py --debug --mute
 ```
 
 ## Architecture
@@ -212,22 +291,51 @@ FreeTimer follows a clean layered architecture with clear separation of concerns
 - **Configures**: Sound notification callbacks during timer creation
 
 #### **GUI Interface** (`src/interfaces/gui/main_window.py`)
-- **Responsibility**: Desktop graphical user interface
-- **Uses**: Tkinter for cross-platform GUI
-- **Status**: 🚧 In development
-- **Reuses**: Same `TimerService` and `Timer` core logic
+- **Responsibility**: Desktop graphical user interface using Tkinter
+- **Components**: 
+  - `MainWindow` - Main application window, toolbar, menu bar, and orchestration
+  - `TimerWidget` (`timer_widget.py`) - Individual timer display with controls and status
+  - `CreateTimerDialog` (`dialogs.py`) - Timer creation dialog with validation
+  - `AboutDialog` (`dialogs.py`) - Application information dialog
+  - `ReadMeDialog` (`dialogs.py`) - Built-in README viewer
+- **Features**: 
+  - Real-time updates with dynamic refresh rates (100-500ms)
+  - Sound toggle for audio notifications
+  - Scrollable timer list for unlimited timers
+  - Cross-platform system notifications (via `system_notifications.py`)
+  - Color-coded status indicators (green=running, yellow=paused, blue=finished)
+- **Status**: ✅ Fully functional
+- **Reuses**: Same `TimerService` and `Timer` core logic as terminal interface
 
-#### **Notifications** (`src/terminal/notifications.py`)
+#### **Notifications** (`src/interfaces/terminal/notifications.py`)
 - **Functional module**: Uses simple functions instead of classes
 - **Functions**: `play_start_sound()`, `play_end_sound()`
 - **Handles**: Audio playback with graceful error handling
+
+#### **System Notifications** (`src/services/system_notifications.py`)
+- **Responsibility**: Cross-platform desktop/system notifications
+- **Functions**: `show_notification()`, `show_timer_finished_notification()`
+- **Platform support**: Windows (plyer), macOS (osascript), Linux (notify-send/plyer)
+- **Graceful handling**: WSL detection, fallback mechanisms, silent failure
+- **Used by**: GUI interface for timer completion alerts
 
 ### Architecture Diagram
 
 ```mermaid
 flowchart TB
-    subgraph UI["🖥️ Terminal Interface"]
-        Terminal[Terminal Interface<br/>Command Processing]
+    subgraph UIs["🖥️ User Interfaces"]
+        subgraph Terminal["Terminal CLI"]
+            TermInt[Terminal Interface<br/>Command Processing<br/>match/case routing]
+        end
+        
+        subgraph GUI["Desktop GUI (Tkinter)"]
+            MainWin[MainWindow<br/>Orchestration<br/>Toolbar + Menu]
+            TimerWid[TimerWidget<br/>Visual Display Only<br/>Fires Callbacks]
+            Dialogs[Dialogs<br/>Create/About/ReadMe]
+            MainWin -->|creates with callbacks| TimerWid
+            MainWin -->|shows| Dialogs
+            TimerWid -.->|button click callbacks| MainWin
+        end
     end
     
     subgraph Service["⚙️ Service Layer"]
@@ -247,9 +355,11 @@ flowchart TB
     
     subgraph Notify["🔔 Notifications"]
         NS[Sound Functions<br/>play_start_sound<br/>play_end_sound]
+        SysNotif[System Notifications<br/>Desktop Alerts<br/>Cross-platform]
     end
     
-    Terminal --> TS
+    TermInt --> TS
+    MainWin -->|commands| TS
     TS -->|delegates| T1
     TS -->|delegates| T2
     
@@ -258,6 +368,13 @@ flowchart TB
     
     T1 -->|on_start/on_end| NS
     T2 -->|on_start/on_end| NS
+    T1 -->|on_finish| SysNotif
+    T2 -->|on_finish| SysNotif
+    
+    MainWin -.->|polls every 100-500ms| TS
+    MainWin -.->|reads timer data| T1
+    MainWin -.->|reads timer data| T2
+    MainWin -.->|passes data to| TimerWid
 ```
 
 ### Project Structure
@@ -268,9 +385,10 @@ src/
     core/
         timer.py            # Self-contained timer (dataclass + threading)
     services/
-        timer_service.py    # Multiple timer coordinator
-        logger.py           # Logging configuration (functional)
-        parse_utils.py      # Time parsing utilities
+        timer_service.py          # Multiple timer coordinator
+        logger.py                 # Logging configuration (functional)
+        parse_utils.py            # Time parsing utilities
+        system_notifications.py   # Cross-platform desktop notifications
     interfaces/
         terminal/
             interface.py    # Terminal UI implementation
@@ -278,7 +396,7 @@ src/
         gui/
             main_window.py  # GUI main window (Tkinter)
             timer_widget.py # Timer display widget
-            dialogs.py      # Dialog windows
+            dialogs.py      # Dialog windows (Create/About/ReadMe)
 main.py                     # Legacy terminal entry point
 gui.py                      # Legacy GUI entry point
 build.py                    # Executable builder script
@@ -288,12 +406,19 @@ Assets/
         timer-terminer.mp3      # End notification sound
 tests/
     core/
-        test_timer.py           # Timer unit tests
-        conftest.py             # Pytest fixtures
+        test_timer.py              # Timer unit tests
+        conftest.py                # Pytest fixtures
     services/
-        test_logger.py          # Logger tests
-        test_timer_service.py   # TimerService tests
-        test_parse_utils.py     # Time parsing tests
+        test_logger.py             # Logger tests
+        test_timer_service.py      # TimerService tests
+        test_parse_utils.py        # Time parsing tests
+    gui/
+        test_main_window.py        # GUI main window tests
+        test_timer_widget.py       # Timer widget tests
+        test_dialogs.py            # Dialog tests
+        conftest.py                # GUI test fixtures
+    terminal/
+        test_notifications.py      # Sound notification tests
 ```
 
 ## Development
