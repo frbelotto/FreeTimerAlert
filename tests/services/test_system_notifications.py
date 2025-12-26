@@ -6,11 +6,7 @@ from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
 
-from src.services.system_notifications import (
-    _is_wsl,
-    show_notification,
-    show_timer_finished_notification,
-)
+from src.services.system_notifications import _is_wsl, show_notification, show_timer_finished_notification
 
 
 class TestIsWsl:
@@ -23,7 +19,7 @@ class TestIsWsl:
         m = mock_open(read_data=fake_content)
         with patch("builtins.open", m):
             result = _is_wsl()
-            
+
         assert result is True
 
     def test_is_wsl_returns_true_when_wsl_in_version(self):
@@ -40,7 +36,7 @@ class TestIsWsl:
         m = mock_open(read_data=fake_content)
         with patch("builtins.open", m):
             result = _is_wsl()
-            
+
         assert result is False
 
     def test_is_wsl_returns_false_when_file_not_found(self):
@@ -60,7 +56,7 @@ class TestIsWsl:
         m = mock_open(read_data=fake_content)
         with patch("builtins.open", m):
             result = _is_wsl()
-            
+
         assert result is True
 
 
@@ -77,9 +73,7 @@ class TestShowNotification:
 
     @patch("src.services.system_notifications._is_wsl")
     @patch("src.services.system_notifications._show_windows_notification")
-    def test_show_notification_calls_windows_on_win32(
-        self, mock_windows, mock_is_wsl
-    ):
+    def test_show_notification_calls_windows_on_win32(self, mock_windows, mock_is_wsl):
         """Windows notification is called on win32 platform."""
         mock_is_wsl.return_value = False
 
@@ -109,9 +103,7 @@ class TestShowNotification:
 
     @patch("src.services.system_notifications._is_wsl")
     @patch("src.services.system_notifications._show_windows_notification")
-    def test_show_notification_handles_exception_gracefully(
-        self, mock_windows, mock_is_wsl
-    ):
+    def test_show_notification_handles_exception_gracefully(self, mock_windows, mock_is_wsl):
         """Exceptions in notification are caught and logged."""
         mock_is_wsl.return_value = False
         mock_windows.side_effect = Exception("Notification failed")
@@ -125,15 +117,11 @@ class TestShowTimerFinishedNotification:
     """Tests for show_timer_finished_notification wrapper."""
 
     @patch("src.services.system_notifications.show_notification")
-    def test_show_timer_finished_notification_calls_show_notification(
-        self, mock_show
-    ):
+    def test_show_timer_finished_notification_calls_show_notification(self, mock_show):
         """Timer finished notification calls show_notification with correct args."""
         show_timer_finished_notification("my_timer")
 
-        mock_show.assert_called_once_with(
-            "Timer Finished!", "Timer 'my_timer' has finished.", timeout=10000
-        )
+        mock_show.assert_called_once_with("Timer Finished!", "Timer 'my_timer' has finished.", timeout=10000)
 
     @patch("src.services.system_notifications.show_notification")
     def test_show_timer_finished_notification_with_special_chars(self, mock_show):
