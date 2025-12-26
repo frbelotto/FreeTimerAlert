@@ -1,11 +1,9 @@
 """Tests for GUI dialog windows."""
 
 import tkinter as tk
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
-
-from src.interfaces.gui.dialogs import AddTimeDialog, CreateTimerDialog
+from src.interfaces.gui.dialogs import CreateTimerDialog
 
 
 class TestCreateTimerDialog:
@@ -108,27 +106,8 @@ class TestCreateTimerDialog:
 
         # Simular fechamento imediato com resultado antes de chamar show
         dialog.result = ("test", "5m")
-        window = dialog.dialog_window
         dialog.dialog_window = None  # Evitar wait_window em janela destruída
 
         result = dialog.show()
 
         assert result == ("test", "5m")
-
-
-class TestAddTimeDialog:
-    """Tests for AddTimeDialog functionality."""
-
-    def test_dialog_initialization(self, tk_root):
-        """Dialog initializes with correct timer name and attributes."""
-        dialog = AddTimeDialog(tk_root, "test_timer")
-
-        assert dialog.timer_name == "test_timer"
-        assert dialog.result is None
-
-    def test_dialog_stores_timer_name(self, tk_root):
-        """Dialog stores timer name correctly."""
-        timer_name = "my_timer"
-        dialog = AddTimeDialog(tk_root, timer_name)
-
-        assert dialog.timer_name == timer_name

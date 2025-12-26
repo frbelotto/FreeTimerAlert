@@ -20,9 +20,7 @@ def _is_wsl() -> bool:
     """
     try:
         with open("/proc/version", "r") as f:
-            content = f.read().lower()
-            return "microsoft" in content or "wsl" in content
-
+            return any(key in f.read().lower() for key in ("microsoft", "wsl"))
     except (FileNotFoundError, PermissionError):
         return False
 
@@ -39,7 +37,7 @@ def show_notification(title: str, message: str, timeout: int = 5000) -> None:
         timeout: Display duration in milliseconds (default: 5000ms = 5s).
                  Note: timeout is not guaranteed on all platforms.
     """
-    # Pula notificações em WSL pois D-Bus geralmente não está disponível
+    # Skip notifications in WSL as D-Bus is usually unavailable
     if _is_wsl():
         logger.debug(f"WSL detected, skipping system notification: {title}")
         return
@@ -112,7 +110,7 @@ def _show_linux_notification(title: str, message: str, timeout: int = 5000) -> N
         else:
             raise subprocess.CalledProcessError(result.returncode, "notify-send")
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        # Usa plyer como alternativa se notify-send não está disponível
+        # Use plyer as fallback if notify-send is unavailable
         try:
             from plyer import notification
 

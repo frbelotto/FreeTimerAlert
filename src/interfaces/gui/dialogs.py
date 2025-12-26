@@ -5,14 +5,14 @@ This module provides dialog windows for user interactions such as
 creating new timers, adding time, and confirmations.
 """
 
-import logging
 import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Optional
 
+from src.services.logger import get_logger
 from src.services.parse_utils import parse_time
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CreateTimerDialog:
@@ -137,25 +137,3 @@ class CreateTimerDialog:
         if self.dialog_window:
             self.dialog_window.wait_window()
         return self.result
-
-
-class AddTimeDialog:
-    """
-    Dialog for adding time to an existing timer.
-
-    Allows user to specify additional duration to add.
-    """
-
-    def __init__(self, parent: tk.Widget, timer_name: str) -> None:
-        """
-        Initialize add time dialog.
-
-        Args:
-            parent: Parent window
-            timer_name: Name of timer to add time to
-        """
-        self.timer_name = timer_name
-        self.result: Optional[str] = None
-
-        # TODO: Implement dialog UI
-        logger.debug(f"Add time dialog initialized for '{timer_name}'")

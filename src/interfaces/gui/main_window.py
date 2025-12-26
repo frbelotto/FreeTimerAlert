@@ -6,10 +6,8 @@ This module provides the main application window and orchestrates
 the GUI components while reusing core business logic.
 """
 
-import logging
 import tkinter as tk
 import webbrowser
-from datetime import timedelta
 from pathlib import Path
 from tkinter import messagebox as mb
 from tkinter import ttk
@@ -17,15 +15,15 @@ from tkinter.scrolledtext import ScrolledText
 
 from src.interfaces.gui.dialogs import CreateTimerDialog
 from src.interfaces.gui.timer_widget import TimerWidget
+from src.services.logger import get_logger
 from src.services.parse_utils import parse_time
 from src.services.timer_service import TimerService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _bold_font(size: int) -> tuple[str, int, str]:
-    """Return a simple bold default font tuple.
-    Simplifica compatibilidade entre Windows/Linux/macOS evitando emojis."""
+    """Return a simple bold default font tuple for cross-platform compatibility."""
     return ("TkDefaultFont", size, "bold")
 
 
@@ -47,7 +45,7 @@ class MainWindow:
         self.root = root
         self.timer_service = TimerService()
         self.timer_widgets: dict[str, TimerWidget] = {}  # Track timer widgets by name
-        self.notifications_enabled: bool = True  # Controlar notificações sonoras
+        self.notifications_enabled: bool = True  # Control audio notifications
 
         self._setup_window()
         self._create_widgets()
@@ -223,11 +221,11 @@ class MainWindow:
         """Toggle sound notifications on/off and update all existing timers."""
         self.notifications_enabled = not self.notifications_enabled
 
-        # Atualizar estado de todos os widgets de timer existentes
+        # Update state of all existing timer widgets
         for timer_widget in self.timer_widgets.values():
             timer_widget.notifications_enabled = self.notifications_enabled
 
-        # Atualizar botão
+        # Update button
         button_text = "Sound: ON" if self.notifications_enabled else "Sound: OFF"
         self.notifications_button.config(text=button_text)
 

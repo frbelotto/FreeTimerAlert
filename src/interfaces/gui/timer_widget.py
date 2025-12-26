@@ -5,18 +5,17 @@ This module provides the visual representation of a single timer
 with controls for start, pause, reset, etc.
 """
 
-import logging
 import tkinter as tk
-from datetime import timedelta
 from tkinter import messagebox, ttk
 from typing import Callable, Optional
 
 from src.core.timer import TimerStatus
 from src.interfaces.terminal.notifications import play_end_sound, play_start_sound, stop_current_sound
+from src.services.logger import get_logger
 from src.services.system_notifications import show_timer_finished_notification
 from src.services.timer_service import TimerService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TimerWidget(ttk.Frame):
@@ -50,8 +49,8 @@ class TimerWidget(ttk.Frame):
         self.timer = timer_service.get_timer(timer_name)
         self.update_job: str | None = None
         self.on_delete_callback = on_delete_callback
-        self.previous_status: TimerStatus | None = None  # Rastrear mudanças de estado
-        self.notifications_enabled = notifications_enabled  # Controlar ativação de som
+        self.previous_status: TimerStatus | None = None  # Track status changes
+        self.notifications_enabled = notifications_enabled  # Control sound activation
 
         self._create_widgets()
         self._setup_layout()
@@ -124,7 +123,7 @@ class TimerWidget(ttk.Frame):
         color = status_color_map.get(self.timer.status, "gray")
         self.status_label.config(text=status_text, foreground=color)
 
-        # Detectar mudanças de estado e tocar sons  # Notifica mudanças de estado com áudio
+        # Detect status changes and play sounds
         self._handle_status_change()
 
         # Update button states
@@ -170,21 +169,21 @@ class TimerWidget(ttk.Frame):
             self.previous_status = current_status
             return
 
-        # Parar som quando timer é pausado
+        # Stop sound when timer is paused
         if self.previous_status == TimerStatus.RUNNING and current_status == TimerStatus.PAUSED:
             try:
                 stop_current_sound()
             except Exception as e:
                 logger.warning(f"Failed to stop sound: {e}")
 
-        # Tocar som quando timer inicia ou retoma
+        # Play sound when timer starts or resumes
         if self.previous_status != TimerStatus.RUNNING and current_status == TimerStatus.RUNNING:
             try:
                 play_start_sound()
             except Exception as e:
                 logger.warning(f"Failed to play start sound: {e}")
 
-        # Tocar som e mostrar notificação visual quando timer termina
+        # Play sound and show visual notification when timer finishes
         if current_status in (TimerStatus.FINISHED, TimerStatus.STOPPED):
             if self.previous_status not in (TimerStatus.FINISHED, TimerStatus.STOPPED):
                 try:
