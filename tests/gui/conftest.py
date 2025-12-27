@@ -6,6 +6,8 @@ including mock windows and services.
 
 from __future__ import annotations
 
+import os
+import sys
 import tkinter as tk
 from datetime import timedelta
 from typing import Callable
@@ -14,6 +16,17 @@ from unittest.mock import Mock
 import pytest
 
 from src.services.timer_service import TimerService
+def _can_create_tk_root() -> bool:
+    """Check if Tkinter root can be created successfully."""
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        root.destroy()
+        return True
+    except tk.TclError:
+        return False
+
+
 
 
 @pytest.fixture
@@ -21,8 +34,18 @@ def tk_root() -> tk.Tk:
     """Create and cleanup Tkinter root window for testing.
 
     Ensures proper cleanup of Tkinter resources after each test.
+    Skips safely on macOS CI when Tcl/Tk is not available to avoid false negatives.
     """
-    root = tk.Tk()
+    # On macOS CI runners, Tcl/Tk may not be installed; skip GUI tests gracefully
+    if sys.platform == "darwin" and os.getenv("CI"):
+        if not _can_create_tk_root():
+            pytest.skip("Tcl/Tk not properly configured in macOS CI environment; skipping GUI tests")
+
+    try:
+        root = tk.Tk()
+    except tk.TclError as e:
+        # Fallback: if Tk cannot be created in any environment, skip GUI tests
+        pytest.skip(f"Tkinter unavailable: {e}")
     root.withdraw()  # Oculta janela durante testes
     yield root
     try:
