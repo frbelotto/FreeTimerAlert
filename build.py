@@ -54,15 +54,25 @@ def build_executable() -> None:
     print(f"Platform: {platform.system()}")
     print(f"Python: {sys.version}")
 
+    # Determine platform-specific settings
+    is_windows = platform.system() == "Windows"
+    data_sep = ";" if is_windows else ":"  # PyInstaller uses ';' on Windows and ':' on Unix
+
+    sounds_src = Path("Assets") / "Sounds"
+    add_data_arg = f"--add-data={sounds_src}{data_sep}Assets/Sounds"
+
+    icon_path = Path("Assets") / "icon.ico"
+    icon_arg = f"--icon={icon_path}" if is_windows and icon_path.exists() else ""
+
     # PyInstaller command using unified entry point
     cmd = [
         "pyinstaller",
         "--name=FreeTimer",
         "--onefile",  # Single executable
         "--windowed",  # No console window (GUI mode by default)
-        "--add-data=Assets/Sounds:Assets/Sounds",  # Include sound files
+        add_data_arg,  # Include sound files (platform-specific separator)
         "--collect-all=tkinter",  # Collect all tkinter files
-        "--icon=Assets/icon.ico" if platform.system() == "Windows" else "",  # Icon (if exists)
+        icon_arg,  # Optional icon on Windows if present
         "src/__main__.py",  # Use src/__main__.py as entry point
     ]
 
