@@ -359,7 +359,8 @@ class TestCompleteUserWorkflow:
 
         # Verify time was added
         assert remaining_after > remaining_before
-        assert remaining_after - remaining_before >= timedelta(seconds=0.9)
+        # Allow slight scheduling variance across CI platforms (macOS runners can be ~0.85s)
+        assert remaining_after - remaining_before >= timedelta(seconds=0.8)
 
 
 @pytest.mark.integration
