@@ -1,0 +1,76 @@
+name: Create Release
+
+on:
+  workflow_run:
+    workflows: ["Build Executables"]
+    types:
+      - completed
+    branches:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          ls -R artifacts/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          
+          # Linux
+          if [ -d "artifacts/FreeTimer-Linux-${{ github.event.workflow_run.head_branch }}" ]; then
+            cd "artifacts/FreeTimer-Linux-${{ github.event.workflow_run.head_branch }}"
+            zip -r ../../release-assets/FreeTimer-Linux-${{ github.event.workflow_run.head_branch }}.zip FreeTimer
+            cd ../..
+          fi
+          
+          # macOS
+          if [ -d "artifacts/FreeTimer-macOS-${{ github.event.workflow_run.head_branch }}" ]; then
+            cd "artifacts/FreeTimer-macOS-${{ github.event.workflow_run.head_branch }}"
+            zip -r ../../release-assets/FreeTimer-macOS-${{ github.event.workflow_run.head_branch }}.zip FreeTimer
+            cd ../..
+          fi
+          
+          # Windows
+          if [ -d "artifacts/FreeTimer-Windows-${{ github.event.workflow_run.head_branch }}" ]; then
+            cd "artifacts/FreeTimer-Windows-${{ github.event.workflow_run.head_branch }}"
+            zip -r ../../release-assets/FreeTimer-Windows-${{ github.event.workflow_run.head_branch }}.zip FreeTimer.exe
+            cd ../..
+          fi
+          
+          echo "Release assets prepared:"
+          ls -lh release-assets/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.workflow_run.head_branch }}
+          name: Release ${{ github.event.workflow_run.head_branch }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release-assets/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
