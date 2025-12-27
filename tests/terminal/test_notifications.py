@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.terminal import notifications
+from src.interfaces.terminal import notifications
 
 
 class TestNotifications:

@@ -29,5 +29,17 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras --dev
 
-    - name: Run tests
+    - name: Install X virtual framebuffer (Linux only)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb
+
+    - name: Run tests (Linux with Xvfb)
+      if: runner.os == 'Linux'
+      run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" uv run task test
+
+    - name: Run tests (Windows/macOS)
+      if: runner.os != 'Linux'
       run: uv run task test
+

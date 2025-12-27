@@ -1,13 +1,14 @@
 [project]
 name = "freetimer"
 version = "0.2.0"
-description = "Simple terminal-based timer application with clean architecture"
+description = "Simple timer application with clean architecture - Terminal and GUI interfaces"
 readme = "README.md"
 license = { text = "CC-BY-NC-SA-4.0" }
 requires-python = ">=3.11"
 dependencies = [
     "playsound3>=3.2.8",
     "rich>=14.2.0",
+    "plyer>=2.1.0",
 ]
 
 
@@ -18,16 +19,28 @@ dev = [
     "pytest>=8.3.4",
     "taskipy>=1.14.1",
 ]
+build = [
+    "pyinstaller>=6.11.1",
+]
 
 [tool.taskipy.tasks]
 format = 'uvx ruff format'
-run = "python main.py"
+run = "python -m src"
+terminal = "python -m src --terminal"
 test = "pytest tests/ -v"
+test-fast = "pytest tests/ -v -m 'not slow and not integration'"
+test-all = "pytest tests/ -v --tb=short"
+test-build = "pytest tests/build/ -v"
+build = "python build.py"
 
 
 [tool.pytest.ini_options]
 pythonpath = "."
 testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]
 
 
 [tool.ruff]
