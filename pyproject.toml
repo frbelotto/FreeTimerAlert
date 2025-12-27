@@ -1,6 +1,6 @@
 [project]
 name = "freetimer"
-version = "0.2.0"
+version = "0.3.0"
 description = "Simple timer application with clean architecture - Terminal and GUI interfaces"
 readme = "README.md"
 license = { text = "CC-BY-NC-SA-4.0" }
