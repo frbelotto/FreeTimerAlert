@@ -16,6 +16,8 @@ from unittest.mock import Mock
 import pytest
 
 from src.services.timer_service import TimerService
+
+
 def _can_create_tk_root() -> bool:
     """Check if Tkinter root can be created successfully."""
     try:
@@ -25,8 +27,6 @@ def _can_create_tk_root() -> bool:
         return True
     except tk.TclError:
         return False
-
-
 
 
 @pytest.fixture

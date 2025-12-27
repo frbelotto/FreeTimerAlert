@@ -2,7 +2,7 @@
 
 > Simple timer application with clean architecture - Terminal and GUI interfaces
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/frbelotto/FreeTimerAlert/releases)
+[![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)](https://github.com/frbelotto/FreeTimerAlert/releases)
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
@@ -72,13 +72,9 @@ cd FreeTimerAlert
 # Install dependencies
 uv sync
 
-# Run with unified entry point (recommended)
+# Run with unified entry point
 python -m src              # GUI interface (default)
 python -m src --terminal   # Terminal interface
-
-# Or use legacy entry points
-python main.py             # Terminal interface
-python gui.py              # GUI interface
 ```
 
 ## Usage
@@ -100,15 +96,11 @@ python -m src --terminal --debug --mute
 ### Desktop GUI Interface
 
 ```bash
-# Modern way
+# Run GUI (default)
 python -m src
-
-# Legacy way (still supported)
-python gui.py
 
 # With options
 python -m src --debug --mute
-python gui.py --debug --mute
 ```
 
 ### Using the Compiled Executable
@@ -172,14 +164,11 @@ The GUI provides a complete desktop experience with:
 ### Terminal Interface
 
 ```bash
-# Modern way
-python -m src
-
-# Legacy way (still supported)
-python main.py
+# Run terminal interface
+python -m src --terminal
 
 # With options
-python -m src --debug --mute
+python -m src --terminal --debug --mute
 ```
 
 The terminal interface provides:
@@ -263,10 +252,6 @@ python -m src --terminal --debug --mute
 
 # Legacy entry points (backward compatible)
 python main.py --debug --mute
-python gui.py --debug --mute
-```
-
-## Architecture
 
 FreeTimer follows a clean layered architecture with clear separation of concerns:
 
@@ -425,30 +410,32 @@ tests/
 ### Running and Testing
 
 ```bash
-# Run terminal interface
+# Run GUI interface (default)
 python -m src
 python -m src --debug --mute
 
-# Run GUI interface
-python -m src --gui
-python -m src --gui --debug
+# Run terminal interface
+python -m src --terminal
+python -m src --terminal --debug --mute
 
 # Or using task runner
-uv run task run    # Terminal (python -m src)
-uv run task gui    # GUI (python -m src --gui)minal
-uv run task gui    # GUI
+uv run task run              # GUI interface (default)
+uv run task terminal         # Terminal interface
 
 # Format code
-uvx ruff format
-
-# Lint code
-uvx ruff check
+uv run task format
 
 # Run tests
-uv run pytest tests/ -v
+uv run task test
 
-# Run tests with coverage
-uv run pytest tests/ -v --cov=src
+# Run tests (fast - exclude slow and integration tests)
+uv run task test-fast
+
+# Run all tests with detailed output
+uv run task test-all
+
+# Run only build tests
+uv run task test-build
 ```
 
 > **Note**: Tests run with `FREETIMER_MUTE=1` to suppress audio during testing.
