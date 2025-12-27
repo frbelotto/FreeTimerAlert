@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
 def clean_build_folders() -> None:
@@ -25,12 +26,12 @@ def clean_build_folders() -> None:
 
     for folder in folders_to_clean:
         if Path(folder).exists():
-            print(f"Removing {folder}/")
+            logger.info(f"Removing {folder}/")
             shutil.rmtree(folder)
 
     # Remove spec files
     for spec_file in Path(".").glob("*.spec"):
-        print(f"Removing {spec_file}")
+        logger.info(f"Removing {spec_file}")
         spec_file.unlink()
 
 
@@ -38,21 +39,21 @@ def cleanup_after_build() -> None:
     """Clean up temporary files after successful build."""
     # Remove spec file (can be regenerated if needed)
     for spec_file in Path(".").glob("*.spec"):
-        print(f"Cleaning up {spec_file}")
+        logger.info(f"Cleaning up {spec_file}")
         spec_file.unlink()
 
     # Remove build folder (only dist is needed)
     if Path("build").exists():
-        print("Cleaning up build/")
+        logger.info("Cleaning up build/")
         shutil.rmtree("build")
 
 
 def build_executable() -> None:
     """Build executable using PyInstaller."""
 
-    print("Building FreeTimer executable...")
-    print(f"Platform: {platform.system()}")
-    print(f"Python: {sys.version}")
+    logger.info("Building FreeTimer executable...")
+    logger.info(f"Platform: {platform.system()}")
+    logger.info(f"Python: {sys.version}")
 
     # Determine platform-specific settings
     is_windows = platform.system() == "Windows"
@@ -79,7 +80,7 @@ def build_executable() -> None:
     # Remove empty strings from command
     cmd = [arg for arg in cmd if arg]
 
-    print(f"\nRunning: {' '.join(cmd)}\n")
+    logger.info(f"\nRunning: {' '.join(cmd)}\n")
 
     try:
         subprocess.run(cmd, check=True)
@@ -87,32 +88,32 @@ def build_executable() -> None:
         # Clean up temporary files after successful build
         cleanup_after_build()
 
-        print("\n✅ Build successful!")
-        print(f"Executable location: dist/FreeTimer{'.exe' if platform.system() == 'Windows' else ''}")
-        print("\nUsage:")
-        print("  ./dist/FreeTimer           # GUI interface (default)")
-        print("  ./dist/FreeTimer --terminal # Terminal interface")
+        logger.info("\nBuild successful!")
+        logger.info(f"Executable location: dist/FreeTimer{'.exe' if platform.system() == 'Windows' else ''}")
+        logger.info("\nUsage:")
+        logger.info("  ./dist/FreeTimer           # GUI interface (default)")
+        logger.info("  ./dist/FreeTimer --terminal # Terminal interface")
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ Build failed: {e}")
+        logger.error(f"\nBuild failed: {e}")
         sys.exit(1)
     except FileNotFoundError:
-        print("\n❌ PyInstaller not found. Install it with:")
-        print("   uv sync --group build")
+        logger.error("\nPyInstaller not found. Install it with:")
+        logger.error("   uv sync --group build")
         sys.exit(1)
 
 
 def main() -> None:
     """Main build process."""
-    print("=" * 60)
-    print("FreeTimer Executable Builder")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("FreeTimer Executable Builder")
+    logger.info("=" * 60)
 
     clean_build_folders()
     build_executable()
 
-    print("\n" + "=" * 60)
-    print("Build Complete!")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("Build Complete!")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":
