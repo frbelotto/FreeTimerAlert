@@ -169,8 +169,9 @@ class TestTimerWidgetButtonStates:
         widget = TimerWidget(tk_root, "test", timer_service)
         widget._update_button_states()
 
-        assert str(widget.start_button.cget("state")) == "normal"
+        assert str(widget.start_button.cget("state")) == "disabled"
         assert str(widget.pause_button.cget("state")) == "normal"
+        assert str(widget.pause_button.cget("text")) == "Continue"
         assert str(widget.reset_button.cget("state")) == "normal"
         assert str(widget.delete_button.cget("state")) == "disabled"
 

@@ -142,22 +142,22 @@ class TimerWidget(ttk.Frame):
 
         if self.timer.status == TimerStatus.IDLE:
             self.start_button.config(state=tk.NORMAL)
-            self.pause_button.config(state=tk.DISABLED)
+            self.pause_button.config(state=tk.DISABLED, text="Pause")
             self.reset_button.config(state=tk.NORMAL)
             self.delete_button.config(state=tk.NORMAL)
         elif self.timer.status == TimerStatus.RUNNING:
             self.start_button.config(state=tk.DISABLED)
-            self.pause_button.config(state=tk.NORMAL)
+            self.pause_button.config(state=tk.NORMAL, text="Pause")
             self.reset_button.config(state=tk.DISABLED)
             self.delete_button.config(state=tk.DISABLED)
         elif self.timer.status == TimerStatus.PAUSED:
-            self.start_button.config(state=tk.NORMAL)
-            self.pause_button.config(state=tk.NORMAL)
+            self.start_button.config(state=tk.DISABLED)
+            self.pause_button.config(state=tk.NORMAL, text="Continue")
             self.reset_button.config(state=tk.NORMAL)
             self.delete_button.config(state=tk.DISABLED)
         elif self.timer.status in (TimerStatus.FINISHED, TimerStatus.STOPPED):
             self.start_button.config(state=tk.NORMAL)
-            self.pause_button.config(state=tk.DISABLED)
+            self.pause_button.config(state=tk.DISABLED, text="Pause")
             self.reset_button.config(state=tk.NORMAL)
             self.delete_button.config(state=tk.NORMAL)
 

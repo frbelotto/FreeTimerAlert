@@ -2,7 +2,7 @@
 
 > Simple timer application with clean architecture - Terminal and GUI interfaces
 
-[![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)](https://github.com/frbelotto/FreeTimerAlert/releases)
+[![Version](https://img.shields.io/badge/version-0.3.2-blue.svg)](https://github.com/frbelotto/FreeTimerAlert/releases)
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
@@ -146,7 +146,11 @@ The GUI provides a complete desktop experience with:
 - **Timer Widget**: Individual display for each timer showing:
   - Timer name, status, and remaining time (HH:MM:SS format)
   - Duration information and progress
-  - Control buttons: Start, Pause, Reset, Delete
+  - **Smart control buttons**:
+    - **Start**: Initiates the countdown (enabled when idle or finished)
+    - **Pause/Continue**: Pauses countdown → button changes to "Continue" to resume (disabled while paused to prevent confusion with Start)
+    - **Reset**: Restores timer to original duration
+    - **Delete**: Removes the timer from the interface
   - Color-coded frame based on timer state
 
 - **Create Timer Dialog**: User-friendly input with:
