@@ -16,6 +16,7 @@ FreeTimer is a lightweight timer application with a clean architecture designed 
 - [Usage](#usage)
 - [Command-Line Options](#command-line-options)
 - [Architecture](#architecture)
+- [Requirements](#requirements)
 - [Development](#development)
 
 ## Features
@@ -365,6 +366,18 @@ flowchart TB
     MainWin -.->|reads timer data| T2
     MainWin -.->|passes data to| TimerWid
 ```
+
+## Requirements
+
+### Python and Tkinter
+
+On Linux, if your Python installation does not include Tkinter, you can install it using the following command (or search for your distro equivalent):
+
+```bash
+sudo apt-get install python3-tk
+```
+
+Make sure to have the necessary permissions to install packages on your system.
 
 ### Project Structure
 
